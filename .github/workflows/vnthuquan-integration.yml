@@ -1,0 +1,33 @@
+name: Live Integration Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      story_url:
+        description: "VnThuQuan story URL"
+        required: true
+        default: "https://thuvien.vnthuquan.net/TacPham/doi-san-cua-quoc-vuong-xtac-18550/"
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-story-scraper.txt
+          pip install pytest
+
+      - name: Run VnThuQuan live test
+        env:
+          VNTHUQUAN_TEST_URL: ${{ inputs.story_url }}
+        run: PYTHONPATH=. pytest -v -m integration tests/integration/test_vnthuquan_live.py
