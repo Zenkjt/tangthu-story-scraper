@@ -1,18 +1,14 @@
 from __future__ import annotations
-from urllib.parse import urlparse
-from ..core.adapter import SiteAdapter
-from ..core.models import Story, Chapter, ChapterStatus
+
+from ..core.html_adapter import BaseStaticHTMLAdapter
+from ..core.models import Story, Chapter
 
 
-class WattpadAdapter(SiteAdapter):
-    """
-    Adapter contract only.
-
-    The DOM/API extraction belongs here; the core engine must never contain
-    Wattpad-specific selectors or URLs.
-    """
+class WattpadAdapter(BaseStaticHTMLAdapter):
+    """Wattpad-specific extraction; no Wattpad rules belong in core."""
 
     name = "wattpad"
+    family = "wattpad"
     hosts = {"wattpad.com"}
 
     @classmethod
@@ -21,9 +17,7 @@ class WattpadAdapter(SiteAdapter):
         return host == "wattpad.com" or host.endswith(".wattpad.com")
 
     def build_index(self, url: str) -> Story:
-        raise NotImplementedError(
-            "Implement Wattpad extraction here; core engine is ready."
-        )
+        raise NotImplementedError("Wattpad extraction is the next implementation step.")
 
     def refresh_tail(self, story: Story) -> list[Chapter]:
         raise NotImplementedError

@@ -7,7 +7,9 @@ class SiteDetector:
         self.adapters = adapters
 
     def detect(self, url: str) -> SiteAdapter:
-        for adapter_cls in self.adapters:
-            if adapter_cls.matches(url):
-                return adapter_cls()
-        raise ValueError(f"Unsupported story site: {url}")
+        matches = [adapter_cls for adapter_cls in self.adapters if adapter_cls.matches(url)]
+        if not matches:
+            raise ValueError(f"Unsupported story site: {url}")
+        # Adapter order is explicit and deterministic. More-specific adapters
+        # should be registered before broad platform-family adapters.
+        return matches[0]()

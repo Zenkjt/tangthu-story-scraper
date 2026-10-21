@@ -1,11 +1,15 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
-from .models import Story, Chapter
+from .models import Chapter, Story
 
 
 class SiteAdapter(ABC):
+    """Public adapter contract used by the Story Scraper engine."""
+
     name: str
+    family: str = "custom"
 
     @classmethod
     @abstractmethod
@@ -14,17 +18,22 @@ class SiteAdapter(ABC):
 
     @abstractmethod
     def build_index(self, url: str) -> Story:
+        """Build initial story metadata + chapter manifest without downloading chapters."""
         raise NotImplementedError
 
     @abstractmethod
     def refresh_tail(self, story: Story) -> list[Chapter]:
-        """Refresh only the tail; return newly discovered/updated chapters."""
+        """Inspect only the tail and return new/changed chapter descriptors."""
         raise NotImplementedError
 
     @abstractmethod
     def fetch_chapter(self, chapter: Chapter) -> tuple[str, bool]:
-        """Return (content, complete)."""
+        """Return chapter content and the site's completion signal."""
         raise NotImplementedError
+
+    def is_chapter_complete(self, chapter: Chapter, content: str) -> bool:
+        """Optional final normalization hook for adapters with local completion rules."""
+        return chapter.status.value == "complete"
 
     @staticmethod
     def host(url: str) -> str:
