@@ -1,0 +1,31 @@
+name: Adapter Registry Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  registry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-story-scraper.txt
+          pip install pytest
+
+      - name: Run registry and regression tests
+        run: |
+          PYTHONPATH=. pytest -v \
+            tests/test_adapter_registry.py \
+            tests/test_story_engine.py \
+            tests/test_story_epub.py \
+            tests/test_wattpad_adapter.py \
+            tests/test_vnthuquan_adapter.py
