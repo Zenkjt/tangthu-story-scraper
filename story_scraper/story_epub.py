@@ -10,7 +10,7 @@ from ebooklib import epub
 from PIL import Image
 
 from .core.epub import EpubSink
-from .models import Chapter, Story
+from .core.models import Chapter, Story
 
 
 class StoryEpubSink(EpubSink):
