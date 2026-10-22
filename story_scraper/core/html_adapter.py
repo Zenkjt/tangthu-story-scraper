@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import mimetypes
+import time
 from abc import ABC
 from html import unescape
+from http.client import IncompleteRead
+from urllib.error import URLError
 from urllib.request import Request, urlopen
 from urllib.parse import urljoin
 
@@ -18,17 +21,45 @@ class BaseStaticHTMLAdapter(BasePlatformAdapter, ABC):
     family = "static-html"
     user_agent = "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)"
 
+    def _read_url(self, request: Request) -> tuple[bytes, str]:
+        last_error = None
+        for attempt in range(3):
+            try:
+                with urlopen(request, timeout=20) as response:
+                    charset = response.headers.get_content_charset() or "utf-8"
+                    return response.read(), charset
+            except (IncompleteRead, URLError) as exc:
+                last_error = exc
+                if attempt == 2:
+                    raise
+                time.sleep(1 + attempt)
+
+        raise last_error  # pragma: no cover
+
     def fetch_html(self, url: str) -> str:
-        request = Request(url, headers={"User-Agent": self.user_agent})
-        with urlopen(request, timeout=20) as response:
-            charset = response.headers.get_content_charset() or "utf-8"
-            return response.read().decode(charset, errors="replace")
+        request = Request(
+            url,
+            headers={
+                "User-Agent": self.user_agent,
+                "Accept": "text/html,application/xhtml+xml",
+                "Accept-Encoding": "identity",
+            },
+        )
+        payload, charset = self._read_url(request)
+        return payload.decode(charset, errors="replace")
 
     def fetch_asset(self, url: str) -> tuple[bytes, str]:
-        request = Request(url, headers={"User-Agent": self.user_agent, "Referer": url})
-        with urlopen(request, timeout=20) as response:
-            media_type = response.headers.get_content_type()
-            return response.read(), media_type
+        request = Request(
+            url,
+            headers={
+                "User-Agent": self.user_agent,
+                "Referer": url,
+                "Accept-Encoding": "identity",
+            },
+        )
+        payload, _ = self._read_url(request)
+        media_type = mimetypes.guess_type(url)[0] or "application/octet-stream"
+        return payload, media_type
 
     @staticmethod
     def soup(html: str) -> BeautifulSoup:
