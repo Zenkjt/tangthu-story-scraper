@@ -14,31 +14,42 @@ PART_URL = (
 )
 
 
-def test_story_url_extracts_story_id():
+def test_wattpad_url_ids():
     assert WattpadAdapter.matches(STORY_URL)
     assert WattpadAdapter.extract_ids(STORY_URL) == (107024873, None)
 
-
-def test_part_url_extracts_part_id():
     assert WattpadAdapter.matches(PART_URL)
     assert WattpadAdapter.extract_ids(PART_URL) == (None, "402782528")
 
 
-def test_manifest_maps_part_id_to_sequential_chapter_number():
+def test_wattpad_manifest_target():
     adapter = WattpadAdapter()
-    story = adapter.build_story_from_manifest(
-        story_id=107024873,
-        source_url=STORY_URL,
-        title="Chuyện người không biết dạ mạn",
-        author="Tác giả",
-        parts=[
-            {"id": 402782528, "title": "Chương 1", "url": PART_URL},
-            {"id": 402782529, "title": "Chương 2"},
-        ],
-        target_external_id="402782528",
-    )
+    story = adapter.fetch_story(STORY_URL)
 
     assert story.story_id == "107024873"
-    assert [c.number for c in story.chapters] == [1, 2]
-    assert [c.external_id for c in story.chapters] == ["402782528", "402782529"]
+    assert story.title == "Chuyện người không biết - Dạ Mạn"
+    assert story.author == "hi"
+    assert len(story.chapters) == 45
+    assert story.chapters[0].number == 1
+    assert story.chapters[0].external_id == "402782528"
+
+
+def test_wattpad_part_url_resolves_target():
+    adapter = WattpadAdapter()
+    story = adapter.fetch_story(PART_URL)
+
+    assert story.story_id == "107024873"
     assert story.target_chapter_number == 1
+    assert story.chapters[0].external_id == "402782528"
+
+
+def test_wattpad_fetch_one_chapter():
+    adapter = WattpadAdapter()
+    story = adapter.fetch_story(PART_URL)
+
+    chapter = story.chapters[story.target_chapter_number - 1]
+    content, complete = adapter.fetch_chapter(chapter)
+
+    assert complete is True
+    assert len(content.html) > 1000
+    assert "Chương" in content.html or "chương" in content.html
