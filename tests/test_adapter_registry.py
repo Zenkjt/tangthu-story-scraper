@@ -1,4 +1,5 @@
 from story_scraper.core.adapter import AdapterNotApplicable, SiteAdapter
+from story_scraper.core.engine import StoryEngine
 from story_scraper.core.models import Story
 from story_scraper.core.registry import AdapterRegistry, default_registry
 
@@ -99,3 +100,34 @@ def test_resolve_instance_returns_implemented_wattpad_adapter():
     )
     assert isinstance(adapter, WattpadAdapter)
     assert adapter.__class__.build_index is WattpadAdapter.build_index
+
+
+def test_resolve_source_keeps_same_adapter_instance_for_engine():
+    class TrackingAdapter(ExactAdapter):
+        name = "tracking"
+        instances = []
+
+        def __init__(self):
+            self.build_index_instance = None
+            self.__class__.instances.append(self)
+
+        def build_index(self, url):
+            self.build_index_instance = self
+            return Story("tracking", url, self.name)
+
+    registry = AdapterRegistry([TrackingAdapter])
+    source = registry.resolve_source("https://example.com/story/1")
+
+    assert source.adapter is TrackingAdapter.instances[0]
+    assert source.adapter.build_index_instance is source.adapter
+
+    class DummyState:
+        def save(self, story):
+            pass
+
+    class DummyEpub:
+        def create(self, story):
+            pass
+
+    engine = StoryEngine(DummyState(), DummyEpub(), source.adapter)
+    assert engine.adapter is source.adapter

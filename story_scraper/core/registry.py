@@ -14,6 +14,14 @@ class AdapterCandidate:
     family: str
 
 
+@dataclass(frozen=True)
+class ResolvedStorySource:
+    """A story index together with the exact adapter instance that built it."""
+
+    adapter: SiteAdapter
+    story: Story
+
+
 class AdapterRegistry:
     """Resolve URL to matching adapters, then try explicit safe fallbacks."""
 
@@ -63,7 +71,9 @@ class AdapterRegistry:
             raise AdapterNotApplicable(f"No adapter matches URL: {url}")
         return candidates[0].adapter()
 
-    def build_index(self, url: str) -> Story:
+    def resolve_source(self, url: str) -> ResolvedStorySource:
+        """Build the index and return the same adapter instance for the engine."""
+
         candidates = self.candidates(url)
         if not candidates:
             raise AdapterNotApplicable(f"No adapter matches URL: {url}")
@@ -72,7 +82,8 @@ class AdapterRegistry:
         for candidate in candidates:
             adapter = candidate.adapter()
             try:
-                return adapter.build_index(url)
+                story = adapter.build_index(url)
+                return ResolvedStorySource(adapter=adapter, story=story)
             except AdapterNotApplicable as exc:
                 rejected.append(f"{candidate.adapter.name}: {exc}")
 
@@ -81,11 +92,18 @@ class AdapterRegistry:
             f"No registered adapter accepted URL: {url} ({detail})"
         )
 
+    def build_index(self, url: str) -> Story:
+        return self.resolve_source(url).story
+
 
 def default_registry() -> AdapterRegistry:
     from ..adapters import WattpadAdapter, VnThuQuanAdapter
     return AdapterRegistry([WattpadAdapter, VnThuQuanAdapter])
 
 
+def build_story_source(url: str) -> ResolvedStorySource:
+    return default_registry().resolve_source(url)
+
+
 def build_story_index(url: str) -> Story:
-    return default_registry().build_index(url)
+    return build_story_source(url).story
