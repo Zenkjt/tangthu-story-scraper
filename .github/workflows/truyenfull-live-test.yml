@@ -1,0 +1,55 @@
+name: TruyenFull Live Adapter Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  truyenfull-live:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-story-scraper.txt
+          pip install pytest
+
+      - name: Verify TruyenFull with existing adapters
+        env:
+          TRUYENFULL_URL: https://truyenfull.live/than-dao-dan-ton-6060282/
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import os
+          from story_scraper.core.adapter import AdapterNotApplicable
+          from story_scraper.adapters.platforms.vnthuquan import VnThuQuanAdapter
+          from story_scraper.adapters.platforms.static_html import StaticHTMLFamilyAdapter
+
+          url = os.environ["TRUYENFULL_URL"]
+
+          print("[1] VnThuQuanAdapter")
+          assert not VnThuQuanAdapter.matches(url), "TruyenFull must not match VnThuQuanAdapter"
+          print("    PASS: rejected")
+
+          print("[2] StaticHTMLFamilyAdapter")
+          adapter = StaticHTMLFamilyAdapter()
+          story = adapter.build_index(url)
+          assert story.title, "Story title is empty"
+          assert len(story.chapters) >= 2, "Too few chapters discovered"
+          assert story.target_chapter_number == story.chapters[0].number
+
+          numbers = [c.number for c in story.chapters]
+          assert numbers == sorted(set(numbers)), "Chapter index is not unique/sorted"
+
+          print(f"    PASS: {story.title}")
+          print(f"    chapters discovered: {len(story.chapters)}")
+          print(f"    first chapter: {story.chapters[0].number} -> {story.chapters[0].url}")
+          print(f"    last chapter:  {story.chapters[-1].number} -> {story.chapters[-1].url}")
+          print("    PASS: index discovery completed without fetching chapter content")
+          PY
