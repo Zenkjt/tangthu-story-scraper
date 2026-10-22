@@ -30,4 +30,4 @@ jobs:
       - name: Run VnThuQuan live test
         env:
           VNTHUQUAN_TEST_URL: ${{ inputs.story_url }}
-        run: PYTHONPATH=. pytest -v -m integration tests/integration/test_vnthuquan_live.py
+        run: PYTHONPATH=. pytest -v -m integration tests/integration/test_vnthuquan_engine_live.py
