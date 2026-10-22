@@ -9,12 +9,13 @@ from .state import StoryStateStore
 
 
 class StoryEngine:
-    """One trigger fetches exactly one chapter."""
+    """One trigger fetches exactly one chapter; index discovery never fetches content."""
 
-    def __init__(self, state: StoryStateStore, epub: EpubSink, adapter: SiteAdapter):
+    def __init__(self, state: StoryStateStore, epub: EpubSink, adapter: SiteAdapter, catalog=None):
         self.state = state
         self.epub = epub
         self.adapter = adapter
+        self.catalog = catalog
 
     def initialize(self, story: Story) -> Story:
         story.chapters.sort(key=lambda c: c.number)
@@ -22,13 +23,23 @@ class StoryEngine:
             story.target_chapter_number = story.chapters[0].number
         self.state.save(story)
         self.epub.create(story)
+        if self.catalog is not None:
+            self.catalog.create(story)
         return story
 
     def next_target(self, story: Story):
         if story.target_chapter_number is None:
             return None
-        return next((c for c in story.chapters
-                     if c.number == story.target_chapter_number), None)
+        return next((c for c in story.chapters if c.number == story.target_chapter_number), None)
+
+    def jump_to_chapter(self, story: Story, number: int) -> Story:
+        """Change target without downloading anything."""
+        target = next((c for c in story.chapters if c.number == int(number)), None)
+        if target is None:
+            raise ValueError(f"Unknown chapter: {number}")
+        story.target_chapter_number = target.number
+        self.state.save(story)
+        return story
 
     def trigger_next(self, story: Story) -> Story:
         chapter = self.next_target(story)
@@ -39,6 +50,7 @@ class StoryEngine:
             if chapter is None:
                 return story
 
+        # Exactly one content fetch per trigger.
         fetched, complete = self.adapter.fetch_chapter(chapter)
         content = fetched if isinstance(fetched, ChapterContent) else fetched
         if isinstance(content, ChapterContent):
@@ -59,12 +71,16 @@ class StoryEngine:
         else:
             story.target_chapter_number = chapter.number
 
+        # Re-index only after consuming the last known chapter. Newly discovered
+        # chapters are targets for a future trigger, never fetched in this one.
         if chapter.number == self._last_known_number(story):
             self._refresh_tail(story)
             if complete:
                 story.target_chapter_number = self._next_known_number(story, chapter.number)
 
         self.state.save(story)
+        if self.catalog is not None:
+            self.catalog.update(story)
         return story
 
     def trigger_previous(self, story: Story) -> Story:
@@ -75,8 +91,7 @@ class StoryEngine:
         if story.target_chapter_number is None:
             story.target_chapter_number = story.chapters[-1].number
         else:
-            previous = [c.number for c in story.chapters
-                        if c.number < story.target_chapter_number]
+            previous = [c.number for c in story.chapters if c.number < story.target_chapter_number]
             if previous:
                 story.target_chapter_number = previous[-1]
 
@@ -95,7 +110,6 @@ class StoryEngine:
     def _refresh_tail(self, story: Story) -> None:
         updates = self.adapter.refresh_tail(story)
         by_number = {c.number: c for c in story.chapters}
-
         for incoming in updates:
             existing = by_number.get(incoming.number)
             if existing is None:
@@ -103,5 +117,4 @@ class StoryEngine:
             else:
                 existing.title = incoming.title or existing.title
                 existing.url = incoming.url or existing.url
-
         story.chapters.sort(key=lambda c: c.number)

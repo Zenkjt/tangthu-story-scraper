@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from ...core.adapter import AdapterNotApplicable
 from ...core.html_adapter import BaseStaticHTMLAdapter
@@ -9,7 +9,11 @@ from ...core.models import Chapter, ChapterContent, Story
 
 
 class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
-    """Conservative fallback for conventional static story/chapter HTML."""
+    """Fallback for conventional static story/chapter HTML.
+
+    Indexing follows pagination to discover chapter URLs only. Chapter content
+    is fetched exclusively by ``fetch_chapter()`` when the engine triggers it.
+    """
 
     name = "static-html-family"
     family = "static-html"
@@ -18,6 +22,10 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
     _CHAPTER_PATTERNS = (
         re.compile(r"(?:chapter|chuong|chương)[-_ /]*(\d+)", re.I),
         re.compile(r"(?:part|phan|phần)[-_ /]*(\d+)", re.I),
+    )
+    _PAGE_PATTERNS = (
+        re.compile(r"/(?:trang|page)[-_ /]*(\d+)(?:/|$)", re.I),
+        re.compile(r"[?&](?:page|trang)[=_-]?(\d+)", re.I),
     )
 
     @classmethod
@@ -33,6 +41,25 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
                 if match:
                     return int(match.group(1))
         return None
+
+    @classmethod
+    def _page_number(cls, href: str, text: str = "") -> int | None:
+        for value in (href, text):
+            for pattern in cls._PAGE_PATTERNS:
+                match = pattern.search(value or "")
+                if match:
+                    return int(match.group(1))
+        return None
+
+    @classmethod
+    def _is_pagination_link(cls, href: str, text: str) -> bool:
+        lower = text.strip().lower()
+        if lower in {"trang tiếp", "tiếp", "next", "next page", "sau", "cuối", "đầu", "first", "last"}:
+            return True
+        if cls._page_number(href, text) is not None:
+            return True
+        rel = (href or "").lower()
+        return "/trang-" in rel or "page=" in rel or "trang=" in rel
 
     def _chapter_links(self, html: str, base_url: str) -> list[tuple[int, str, str]]:
         soup = self.soup(html)
@@ -50,24 +77,61 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
 
         return sorted(result, key=lambda item: item[0])
 
-    def build_index(self, url: str) -> Story:
-        html = self.fetch_html(url)
+    def _pagination_links(self, html: str, base_url: str) -> list[str]:
         soup = self.soup(html)
-        chapters = self._chapter_links(html, url)
+        result: list[str] = []
+        seen: set[str] = set()
 
-        # A family adapter must reject pages that merely happen to contain
-        # ordinary numbered links.
+        for link in soup.find_all("a", href=True):
+            href = self.absolute_url(base_url, link["href"])
+            text = self.clean_text(link)
+            if not self._is_pagination_link(href, text) or href in seen:
+                continue
+            seen.add(href)
+            result.append(href)
+        return result
+
+    def _index_pages(self, url: str) -> list[tuple[str, str]]:
+        """Fetch index/pagination pages only; never fetch chapter URLs here."""
+        queue = [url]
+        seen: set[str] = set()
+        pages: list[tuple[str, str]] = []
+
+        while queue:
+            page_url = queue.pop(0)
+            if page_url in seen:
+                continue
+            seen.add(page_url)
+            html = self.fetch_html(page_url)
+            pages.append((page_url, html))
+
+            for next_url in self._pagination_links(html, page_url):
+                if next_url not in seen:
+                    queue.append(next_url)
+
+        return pages
+
+    def build_index(self, url: str) -> Story:
+        pages = self._index_pages(url)
+        first_html = pages[0][1]
+        first_soup = self.soup(first_html)
+
+        chapters: dict[int, tuple[str, str]] = {}
+        for page_url, html in pages:
+            for number, title, chapter_url in self._chapter_links(html, page_url):
+                chapters.setdefault(number, (title, chapter_url))
+
         if len(chapters) < 2:
             raise AdapterNotApplicable(
                 "static HTML page does not expose a recognizable chapter index"
             )
 
-        title = self.clean_text(soup.find("h1") or soup.find("title"))
+        title = self.clean_text(first_soup.find("h1") or first_soup.find("title"))
         if not title:
             raise AdapterNotApplicable("static HTML story page has no title")
 
         author = ""
-        author_node = soup.select_one(
+        author_node = first_soup.select_one(
             '[rel="author"], .author, .byline, [class*="author"]'
         )
         if author_node:
@@ -75,6 +139,7 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
 
         parsed = urlparse(url)
         story_id = f"{parsed.netloc}{parsed.path.rstrip('/')}" or parsed.netloc
+        ordered = sorted(chapters.items())
 
         return Story(
             story_id=story_id,
@@ -84,21 +149,26 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
             author=author,
             chapters=[
                 Chapter(number=n, title=t, url=u)
-                for n, t, u in chapters
+                for n, (t, u) in ordered
             ],
-            target_chapter_number=chapters[0][0],
+            target_chapter_number=ordered[0][0],
         )
 
     def refresh_tail(self, story: Story) -> list[Chapter]:
-        html = self.fetch_html(story.source_url)
+        pages = self._index_pages(story.source_url)
         known = {chapter.number for chapter in story.chapters}
+        found: dict[int, tuple[str, str]] = {}
+        for page_url, html in pages:
+            for number, title, chapter_url in self._chapter_links(html, page_url):
+                if number not in known:
+                    found[number] = (title, chapter_url)
         return [
             Chapter(number=n, title=t, url=u)
-            for n, t, u in self._chapter_links(html, story.source_url)
-            if n not in known
+            for n, (t, u) in sorted(found.items())
         ]
 
     def fetch_chapter(self, chapter: Chapter) -> tuple[ChapterContent, bool]:
+        # This is the only method in this adapter that fetches chapter content.
         html = self.fetch_html(chapter.url)
         soup = self.soup(html)
 
