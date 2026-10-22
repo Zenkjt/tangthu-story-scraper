@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -9,6 +10,28 @@ class ChapterStatus(str, Enum):
     PENDING = "pending"
     OPEN = "open"
     COMPLETE = "complete"
+
+
+@dataclass
+class ChapterAsset:
+    path: str
+    content: bytes
+    media_type: str
+
+
+@dataclass
+class ChapterContent:
+    html: str
+    assets: list[ChapterAsset] = field(default_factory=list)
+
+    def fingerprint(self) -> str:
+        digest = hashlib.sha256()
+        digest.update(self.html.encode("utf-8"))
+        for asset in sorted(self.assets, key=lambda item: item.path):
+            digest.update(asset.path.encode("utf-8"))
+            digest.update(asset.media_type.encode("utf-8"))
+            digest.update(asset.content)
+        return digest.hexdigest()
 
 
 @dataclass

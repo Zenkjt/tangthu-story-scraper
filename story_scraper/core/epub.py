@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from .models import Chapter, Story
+from .models import Chapter, ChapterContent, Story
 
 
 class EpubSink(ABC):
@@ -10,15 +10,12 @@ class EpubSink(ABC):
 
     @abstractmethod
     def create(self, story: Story) -> None:
-        """Create or initialize the EPUB artifact for a story."""
         raise NotImplementedError
 
     @abstractmethod
-    def append(self, story: Story, chapter: Chapter, content: str) -> None:
-        """Append a newly fetched chapter to the EPUB artifact."""
+    def append(self, story: Story, chapter: Chapter, content: str | ChapterContent) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def replace(self, story: Story, chapter: Chapter, content: str) -> None:
-        """Replace an existing chapter in the EPUB artifact."""
+    def replace(self, story: Story, chapter: Chapter, content: str | ChapterContent) -> None:
         raise NotImplementedError

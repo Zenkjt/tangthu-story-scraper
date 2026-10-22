@@ -4,7 +4,7 @@ import hashlib
 
 from .adapter import SiteAdapter
 from .epub import EpubSink
-from .models import ChapterStatus, Story
+from .models import ChapterContent, ChapterStatus, Story
 from .state import StoryStateStore
 
 
@@ -39,8 +39,12 @@ class StoryEngine:
             if chapter is None:
                 return story
 
-        content, complete = self.adapter.fetch_chapter(chapter)
-        new_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        fetched, complete = self.adapter.fetch_chapter(chapter)
+        content = fetched if isinstance(fetched, ChapterContent) else fetched
+        if isinstance(content, ChapterContent):
+            new_hash = content.fingerprint()
+        else:
+            new_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
 
         if chapter.content_hash is None:
             self.epub.append(story, chapter, content)
@@ -99,6 +103,5 @@ class StoryEngine:
             else:
                 existing.title = incoming.title or existing.title
                 existing.url = incoming.url or existing.url
-                # Preserve existing status and content_hash.
 
         story.chapters.sort(key=lambda c: c.number)
