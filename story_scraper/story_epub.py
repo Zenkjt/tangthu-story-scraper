@@ -9,7 +9,7 @@ from pathlib import Path
 from ebooklib import epub
 from PIL import Image
 
-from .epub import EpubSink
+from .core.epub import EpubSink
 from .models import Chapter, Story
 
 
