@@ -36,7 +36,6 @@ class AdapterRegistry:
 
     @staticmethod
     def _probe(adapter: Type[SiteAdapter], url: str) -> bool:
-        # Backward-compatible with adapters that only implement matches().
         probe = getattr(adapter, "probe", None)
         if probe is not None:
             return bool(probe(url))
@@ -53,6 +52,7 @@ class AdapterRegistry:
                         family=getattr(adapter, "family", "custom"),
                     )
                 )
+
         return sorted(
             result,
             key=lambda candidate: (
@@ -72,8 +72,6 @@ class AdapterRegistry:
         return candidates[0].adapter()
 
     def resolve_source(self, url: str) -> ResolvedStorySource:
-        """Build the index and return the same adapter instance for the engine."""
-
         candidates = self.candidates(url)
         if not candidates:
             raise AdapterNotApplicable(f"No adapter matches URL: {url}")
@@ -97,8 +95,19 @@ class AdapterRegistry:
 
 
 def default_registry() -> AdapterRegistry:
-    from ..adapters import WattpadAdapter, VnThuQuanAdapter
-    return AdapterRegistry([WattpadAdapter, VnThuQuanAdapter])
+    from ..adapters import (
+        StaticHTMLFamilyAdapter,
+        VnThuQuanAdapter,
+        WattpadAdapter,
+    )
+
+    return AdapterRegistry(
+        [
+            WattpadAdapter,
+            VnThuQuanAdapter,
+            StaticHTMLFamilyAdapter,
+        ]
+    )
 
 
 def build_story_source(url: str) -> ResolvedStorySource:

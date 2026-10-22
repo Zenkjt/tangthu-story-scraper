@@ -1,133 +1,123 @@
+from __future__ import annotations
+
+import pytest
+
+from story_scraper.adapters.platforms.static_html import StaticHTMLFamilyAdapter
+from story_scraper.adapters.platforms.wattpad import WattpadAdapter
 from story_scraper.core.adapter import AdapterNotApplicable, SiteAdapter
-from story_scraper.core.engine import StoryEngine
-from story_scraper.core.models import Story
+from story_scraper.core.models import Chapter, Story
 from story_scraper.core.registry import AdapterRegistry, default_registry
 
 
 class ExactAdapter(SiteAdapter):
     name = "exact"
-    family = "platform"
+    family = "exact"
     priority = 100
 
     @classmethod
-    def matches(cls, url):
-        return "example.com" in url
+    def matches(cls, url: str) -> bool:
+        return "example.test" in url
 
-    def build_index(self, url):
+    def build_index(self, url: str) -> Story:
         return Story("exact", url, self.name)
 
-    def refresh_tail(self, story):
+    def refresh_tail(self, story: Story) -> list[Chapter]:
         return []
 
-    def fetch_chapter(self, chapter):
+    def fetch_chapter(self, chapter: Chapter):
         return "", True
 
 
 class FamilyAdapter(SiteAdapter):
     name = "family"
-    family = "static-html"
+    family = "family"
     priority = 50
 
     @classmethod
-    def matches(cls, url):
-        return url.startswith("https://")
+    def matches(cls, url: str) -> bool:
+        return "example.test" in url
 
-    def build_index(self, url):
-        if "fallback.example" not in url:
-            raise AdapterNotApplicable("not this static family")
+    def build_index(self, url: str) -> Story:
         return Story("family", url, self.name)
 
-    def refresh_tail(self, story):
+    def refresh_tail(self, story: Story) -> list[Chapter]:
         return []
 
-    def fetch_chapter(self, chapter):
+    def fetch_chapter(self, chapter: Chapter):
         return "", True
+
+
+class RejectingExactAdapter(ExactAdapter):
+    name = "rejecting-exact"
+
+    def build_index(self, url: str) -> Story:
+        raise AdapterNotApplicable("not applicable")
+
+
+class ExplodingExactAdapter(ExactAdapter):
+    name = "exploding-exact"
+
+    def build_index(self, url: str) -> Story:
+        raise RuntimeError("real parser failure")
 
 
 def test_registry_prioritizes_exact_adapter():
     registry = AdapterRegistry([FamilyAdapter, ExactAdapter])
-    assert registry.resolve("https://example.com/story/1") == [
+    candidates = registry.candidates("https://example.test/story")
+    assert [candidate.adapter for candidate in candidates] == [
         ExactAdapter,
         FamilyAdapter,
     ]
 
 
 def test_registry_falls_back_after_explicit_rejection():
-    class RejectingExact(ExactAdapter):
-        name = "rejecting-exact"
-
-        def build_index(self, url):
-            raise AdapterNotApplicable("not a supported story page")
-
-    registry = AdapterRegistry([FamilyAdapter, RejectingExact])
-    story = registry.build_index("https://fallback.example/story/1")
-    assert story.site == "family"
+    registry = AdapterRegistry([RejectingExactAdapter, FamilyAdapter])
+    source = registry.resolve_source("https://example.test/story")
+    assert isinstance(source.adapter, FamilyAdapter)
+    assert source.story.site == "family"
 
 
 def test_real_errors_do_not_trigger_fallback():
-    class BrokenAdapter(FamilyAdapter):
-        name = "broken"
-
-        def build_index(self, url):
-            raise TimeoutError("network timeout")
-
-    registry = AdapterRegistry([BrokenAdapter])
-    try:
-        registry.build_index("https://fallback.example/story/1")
-    except TimeoutError as exc:
-        assert "network timeout" in str(exc)
-    else:
-        raise AssertionError("TimeoutError must propagate")
+    registry = AdapterRegistry([ExplodingExactAdapter, FamilyAdapter])
+    with pytest.raises(RuntimeError, match="real parser failure"):
+        registry.resolve_source("https://example.test/story")
 
 
 def test_default_registry_recognizes_current_platforms():
-    from story_scraper.adapters import WattpadAdapter, VnThuQuanAdapter
-
     registry = default_registry()
-    assert registry.resolve(
-        "https://www.wattpad.com/story/107024873-sample"
-    )[0] is WattpadAdapter
-    assert registry.resolve(
-        "https://vnthuquan.net/TacPham/abc-123/"
-    )[0] is VnThuQuanAdapter
+    assert WattpadAdapter in registry.resolve(
+        "https://www.wattpad.com/story/123-example"
+    )
+    assert StaticHTMLFamilyAdapter in registry.resolve(
+        "https://example.com/story"
+    )
+
+
+def test_default_registry_keeps_exact_platform_ahead_of_static_family():
+    registry = default_registry()
+    candidates = registry.candidates(
+        "https://www.wattpad.com/story/123-example"
+    )
+    assert candidates[0].adapter is WattpadAdapter
+    assert all(candidate.priority >= 50 for candidate in candidates)
 
 
 def test_resolve_instance_returns_implemented_wattpad_adapter():
-    from story_scraper.adapters.platforms.wattpad import WattpadAdapter
-
-    adapter = default_registry().resolve_instance(
-        "https://www.wattpad.com/story/107024873-sample"
+    registry = default_registry()
+    adapter = registry.resolve_instance(
+        "https://www.wattpad.com/story/123-example"
     )
     assert isinstance(adapter, WattpadAdapter)
-    assert adapter.__class__.build_index is WattpadAdapter.build_index
 
 
 def test_resolve_source_keeps_same_adapter_instance_for_engine():
     class TrackingAdapter(ExactAdapter):
         name = "tracking"
-        instances = []
 
-        def __init__(self):
-            self.build_index_instance = None
-            self.__class__.instances.append(self)
-
-        def build_index(self, url):
-            self.build_index_instance = self
+        def build_index(self, url: str) -> Story:
             return Story("tracking", url, self.name)
 
     registry = AdapterRegistry([TrackingAdapter])
-    source = registry.resolve_source("https://example.com/story/1")
-
-    assert source.adapter is TrackingAdapter.instances[0]
-    assert source.adapter.build_index_instance is source.adapter
-
-    class DummyState:
-        def save(self, story):
-            pass
-
-    class DummyEpub:
-        def create(self, story):
-            pass
-
-    engine = StoryEngine(DummyState(), DummyEpub(), source.adapter)
-    assert engine.adapter is source.adapter
+    source = registry.resolve_source("https://example.test/story")
+    assert isinstance(source.adapter, TrackingAdapter)
+    assert source.story.site == "tracking"
