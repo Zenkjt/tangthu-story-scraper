@@ -26,10 +26,18 @@ class AdapterRegistry:
         if adapter not in self._adapters:
             self._adapters.append(adapter)
 
+    @staticmethod
+    def _probe(adapter: Type[SiteAdapter], url: str) -> bool:
+        # Backward-compatible with adapters that only implement matches().
+        probe = getattr(adapter, "probe", None)
+        if probe is not None:
+            return bool(probe(url))
+        return bool(adapter.matches(url))
+
     def candidates(self, url: str) -> list[AdapterCandidate]:
         result: list[AdapterCandidate] = []
         for adapter in self._adapters:
-            if adapter.probe(url):
+            if self._probe(adapter, url):
                 result.append(
                     AdapterCandidate(
                         adapter=adapter,
@@ -50,7 +58,6 @@ class AdapterRegistry:
         return [candidate.adapter for candidate in self.candidates(url)]
 
     def resolve_instance(self, url: str) -> SiteAdapter:
-        """Return an instantiated adapter for an exact/platform URL match."""
         candidates = self.candidates(url)
         if not candidates:
             raise AdapterNotApplicable(f"No adapter matches URL: {url}")
@@ -76,9 +83,7 @@ class AdapterRegistry:
 
 
 def default_registry() -> AdapterRegistry:
-    """Return the built-in platform adapters in one canonical import location."""
     from ..adapters import WattpadAdapter, VnThuQuanAdapter
-
     return AdapterRegistry([WattpadAdapter, VnThuQuanAdapter])
 
 
