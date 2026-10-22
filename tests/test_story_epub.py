@@ -50,7 +50,7 @@ def test_create_append_replace(tmp_path):
     book = epub.read_epub(str(output))
     assert book.get_item_with_id("chapter-1") is not None
     assert book.get_item_with_id("chapter-2") is not None
-    assert [item.file_name for item in book.spine] == [
+    assert [book.get_item_with_id(item[0]).file_name for item in book.spine] == [
         "cover.xhtml",
         "story.xhtml",
         "chapter-1.xhtml",
