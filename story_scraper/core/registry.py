@@ -29,8 +29,6 @@ class AdapterRegistry:
     def candidates(self, url: str) -> list[AdapterCandidate]:
         result: list[AdapterCandidate] = []
         for adapter in self._adapters:
-            # A probe is selection logic, not a network request. A broken probe
-            # should be visible instead of silently hiding a registry defect.
             if adapter.probe(url):
                 result.append(
                     AdapterCandidate(
@@ -50,6 +48,13 @@ class AdapterRegistry:
 
     def resolve(self, url: str) -> list[Type[SiteAdapter]]:
         return [candidate.adapter for candidate in self.candidates(url)]
+
+    def resolve_instance(self, url: str) -> SiteAdapter:
+        """Return an instantiated adapter for an exact/platform URL match."""
+        candidates = self.candidates(url)
+        if not candidates:
+            raise AdapterNotApplicable(f"No adapter matches URL: {url}")
+        return candidates[0].adapter()
 
     def build_index(self, url: str) -> Story:
         candidates = self.candidates(url)
@@ -71,15 +76,11 @@ class AdapterRegistry:
 
 
 def default_registry() -> AdapterRegistry:
-    """Build the built-in registry without importing adapters into the core module."""
+    """Return the built-in platform adapters in one canonical import location."""
     from ..adapters import WattpadAdapter, VnThuQuanAdapter
 
-    registry = AdapterRegistry()
-    registry.register(WattpadAdapter)
-    registry.register(VnThuQuanAdapter)
-    return registry
+    return AdapterRegistry([WattpadAdapter, VnThuQuanAdapter])
 
 
 def build_story_index(url: str) -> Story:
-    """Convenience entry point for application/CLI code."""
     return default_registry().build_index(url)

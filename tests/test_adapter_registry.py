@@ -1,6 +1,6 @@
 from story_scraper.core.adapter import AdapterNotApplicable, SiteAdapter
 from story_scraper.core.models import Story
-from story_scraper.core.registry import AdapterRegistry
+from story_scraper.core.registry import AdapterRegistry, default_registry
 
 
 class ExactAdapter(SiteAdapter):
@@ -81,7 +81,6 @@ def test_real_errors_do_not_trigger_fallback():
 
 def test_default_registry_recognizes_current_platforms():
     from story_scraper.adapters import WattpadAdapter, VnThuQuanAdapter
-    from story_scraper.core.registry import default_registry
 
     registry = default_registry()
     assert registry.resolve(
@@ -90,3 +89,13 @@ def test_default_registry_recognizes_current_platforms():
     assert registry.resolve(
         "https://vnthuquan.net/TacPham/abc-123/"
     )[0] is VnThuQuanAdapter
+
+
+def test_resolve_instance_returns_implemented_wattpad_adapter():
+    from story_scraper.adapters.platforms.wattpad import WattpadAdapter
+
+    adapter = default_registry().resolve_instance(
+        "https://www.wattpad.com/story/107024873-sample"
+    )
+    assert isinstance(adapter, WattpadAdapter)
+    assert adapter.__class__.build_index is WattpadAdapter.build_index
