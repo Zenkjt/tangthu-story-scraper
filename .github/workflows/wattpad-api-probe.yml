@@ -1,0 +1,43 @@
+name: Wattpad API Probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Wattpad story API
+        shell: bash
+        run: |
+          set -u
+          STORY_ID=107024873
+          PART_ID=402782528
+
+          probe() {
+            local name="$1"
+            local url="$2"
+            echo ""
+            echo "===== $name ====="
+            echo "$url"
+            echo "--- headers/status ---"
+            curl -L -sS -D /tmp/headers -o /tmp/body \
+              -A 'Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)' \
+              --max-time 30 "$url" || true
+            sed -n '1,20p' /tmp/headers
+            echo "--- body (first 4000 bytes) ---"
+            head -c 4000 /tmp/body
+            echo
+          }
+
+          probe "V3 story info" \
+            "https://www.wattpad.com/api/v3/stories/${STORY_ID}?fields=id,title,url,user(name,username),parts(id,title,url,deleted,draft,createDate,modifyDate),numParts,cover"
+
+          probe "V3 part info" \
+            "https://www.wattpad.com/api/v3/stories/${STORY_ID}/parts/${PART_ID}"
+
+          probe "V3 story_part content" \
+            "https://www.wattpad.com/api/v3/story_parts/${PART_ID}"
+
+          probe "V4 story lookup" \
+            "https://api.wattpad.com/v4/stories?query=${STORY_ID}"
