@@ -30,7 +30,7 @@ class AdapterCoverage:
 
 
 class AdapterResolutionStore:
-    """Global adapter-resolution history plus a fast domain coverage index."""
+    """Global adapter-resolution history plus a derived active coverage index."""
 
     def __init__(self, path: str | Path):
         self.path = Path(path)
@@ -67,9 +67,25 @@ class AdapterResolutionStore:
         item = self.latest_for_domain(domain)
         if item is None:
             return AdapterCoverage(domain, "unknown")
-        if item.result == "success":
-            return AdapterCoverage(domain, "good", item.adapter, item.reason, item.timestamp, item.url)
-        return AdapterCoverage(domain, "failure", item.adapter, item.reason, item.timestamp, item.url)
+        return AdapterCoverage(
+            domain,
+            "good" if item.result == "success" else "failure",
+            item.adapter,
+            item.reason,
+            item.timestamp,
+            item.url,
+        )
+
+    def active_coverage(self) -> list[AdapterCoverage]:
+        domains = {item.domain for item in self.records()}
+        return [self.coverage(domain) for domain in sorted(domains)]
+
+    def coverage_for_adapter(self, adapter: str, status: str | None = None) -> list[AdapterCoverage]:
+        items = [
+            item for item in self.active_coverage()
+            if item.adapter == adapter and (status is None or item.status == status)
+        ]
+        return items
 
     def known_good(self, domain: str) -> bool:
         return self.coverage(domain).status == "good"
@@ -84,12 +100,10 @@ class AdapterResolutionStore:
         return None
 
     def known_good_list(self) -> list[AdapterCoverage]:
-        domains = {item.domain for item in self.records()}
-        return [self.coverage(d) for d in sorted(domains) if self.known_good(d)]
+        return [item for item in self.active_coverage() if item.status == "good"]
 
     def failure_list(self) -> list[AdapterCoverage]:
-        domains = {item.domain for item in self.records()}
-        return [self.coverage(d) for d in sorted(domains) if self.known_failure(d)]
+        return [item for item in self.active_coverage() if item.status == "failure"]
 
     def recheck_required(self, domain: str) -> bool:
         return self.coverage(domain).status == "failure"

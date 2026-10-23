@@ -22,7 +22,7 @@ class ResolvedStorySource:
 
 
 class AdapterRegistry:
-    """Resolve URLs with fast known-failure/known-good coverage checks."""
+    """Resolve URLs from registered adapters; domains are learned from resolution history."""
 
     def __init__(self, adapters=None, resolution_store: AdapterResolutionStore | None = None):
         self._adapters = []
@@ -33,6 +33,13 @@ class AdapterRegistry:
     def register(self, adapter):
         if adapter not in self._adapters:
             self._adapters.append(adapter)
+
+    def registered_adapters(self) -> tuple[Type[SiteAdapter], ...]:
+        """Return the adapter classes currently registered; no domain list is required."""
+        return tuple(self._adapters)
+
+    def registered_adapter_names(self) -> list[str]:
+        return [adapter.name for adapter in self._adapters]
 
     @staticmethod
     def _probe(adapter, url: str) -> bool:
