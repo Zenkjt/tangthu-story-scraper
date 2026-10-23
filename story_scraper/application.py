@@ -7,16 +7,21 @@ from .core.epub import EpubSink
 from .core.manifest import StoryManifestStore
 from .core.models import Story
 from .core.registry import AdapterRegistry, ResolvedStorySource, default_registry
+from .core.resolution import AdapterResolutionStore
 from .core.state import StoryStateStore
 from .story_catalog import StoryCatalogEpubSink
 
 
 class StoryApplication:
-    """Application entry point between state, manifest, catalog EPUB, and StoryEngine."""
+    """Application entry point between state, manifest, catalog, and StoryEngine."""
 
-    def __init__(self, state: StoryStateStore, manifest: StoryManifestStore,
-                 registry: AdapterRegistry | None = None,
-                 catalog: StoryCatalogEpubSink | None = None):
+    def __init__(
+        self,
+        state: StoryStateStore,
+        manifest: StoryManifestStore,
+        registry: AdapterRegistry | None = None,
+        catalog: StoryCatalogEpubSink | None = None,
+    ):
         self.state = state
         self.manifest = manifest
         self.registry = registry or default_registry()
@@ -26,19 +31,25 @@ class StoryApplication:
         source: ResolvedStorySource = self.registry.resolve_source(url)
         story = source.story
         self.manifest.save(user_id, story)
-        return StoryEngine(self.state, epub, source.adapter, catalog=self.catalog).initialize(story)
+        return StoryEngine(
+            self.state, epub, source.adapter, catalog=self.catalog
+        ).initialize(story)
 
     def trigger_next(self, user_id: str, story_id: str, epub: EpubSink) -> Story:
         story = self._load_story(user_id, story_id)
         adapter = self.registry.resolve_instance(story.source_url)
-        story = StoryEngine(self.state, epub, adapter, catalog=self.catalog).trigger_next(story)
+        story = StoryEngine(
+            self.state, epub, adapter, catalog=self.catalog
+        ).trigger_next(story)
         self.manifest.save(user_id, story)
         return story
 
     def trigger_previous(self, user_id: str, story_id: str, epub: EpubSink) -> Story:
         story = self._load_story(user_id, story_id)
         adapter = self.registry.resolve_instance(story.source_url)
-        story = StoryEngine(self.state, epub, adapter, catalog=self.catalog).trigger_previous(story)
+        story = StoryEngine(
+            self.state, epub, adapter, catalog=self.catalog
+        ).trigger_previous(story)
         self.manifest.save(user_id, story)
         return story
 
@@ -60,7 +71,23 @@ class StoryApplication:
         return state_story
 
 
-def build_application(state_root: str | Path, manifest_root: str | Path,
-                      registry: AdapterRegistry | None = None,
-                      catalog: StoryCatalogEpubSink | None = None) -> StoryApplication:
-    return StoryApplication(StoryStateStore(state_root), StoryManifestStore(manifest_root), registry, catalog)
+def build_application(
+    state_root: str | Path,
+    manifest_root: str | Path,
+    registry: AdapterRegistry | None = None,
+    catalog: StoryCatalogEpubSink | None = None,
+    resolution_root: str | Path | None = None,
+) -> StoryApplication:
+    if registry is None:
+        resolution_store = (
+            AdapterResolutionStore(resolution_root)
+            if resolution_root is not None
+            else None
+        )
+        registry = default_registry(resolution_store)
+    return StoryApplication(
+        StoryStateStore(state_root),
+        StoryManifestStore(manifest_root),
+        registry,
+        catalog,
+    )
