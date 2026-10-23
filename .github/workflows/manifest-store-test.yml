@@ -32,3 +32,7 @@ jobs:
       - name: Test Story Catalog / TOC EPUB
         run: |
           PYTHONPATH=. pytest -v tests/test_story_catalog.py
+
+      - name: Test Adapter Resolution
+        run: |
+          PYTHONPATH=. pytest -v tests/test_adapter_resolution.py
