@@ -56,7 +56,7 @@ class FailingAdapter(SiteAdapter):
         return True
 
     def build_index(self, url):
-        raise RuntimeError("network timeout")
+        raise TimeoutError("network timeout")
 
     def refresh_tail(self, story):
         return []
