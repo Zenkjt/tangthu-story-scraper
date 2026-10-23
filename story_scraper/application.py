@@ -9,12 +9,11 @@ from .core.models import Story
 from .core.registry import AdapterRegistry, ResolvedStorySource, default_registry
 from .core.resolution import AdapterResolutionStore
 from .core.state import StoryStateStore
-from .core.registration import StoryRegistrationStore
 from .story_catalog import StoryCatalogEpubSink
 
 
 class StoryApplication:
-    """Application entry point between registration, state, manifest, catalog, and engine."""
+    """Application entry point between state, manifest, catalog, and StoryEngine."""
 
     def __init__(
         self,
@@ -22,30 +21,30 @@ class StoryApplication:
         manifest: StoryManifestStore,
         registry: AdapterRegistry | None = None,
         catalog: StoryCatalogEpubSink | None = None,
-        registration: StoryRegistrationStore | None = None,
     ):
         self.state = state
         self.manifest = manifest
         self.registry = registry or default_registry()
         self.catalog = catalog
-        self.registration = registration
 
-    def initialize(self, user_id: str, url: str, epub: EpubSink) -> Story:
-        return self.register(user_id, url, epub)
-
-    def register(self, user_id: str, url: str, epub: EpubSink) -> Story:
-        if self.registration is not None:
-            existing_id = self.registration.get(user_id, url)
-            if existing_id is not None:
-                existing = self._load_story(user_id, existing_id)
-                return existing
-
+    def initialize(
+        self,
+        user_id: str,
+        url: str,
+        epub: EpubSink,
+        *,
+        start_chapter_number: int | None = None,
+    ) -> Story:
         source: ResolvedStorySource = self.registry.resolve_source(url)
         story = source.story
+        if start_chapter_number is not None:
+            target = next(
+                (c for c in story.chapters if c.number == int(start_chapter_number)),
+                None,
+            )
+            if target is not None:
+                story.target_chapter_number = target.number
         self.manifest.save(user_id, story)
-        if self.registration is not None:
-            self.registration.register(user_id, url, story.story_id)
-
         return StoryEngine(
             self.state, epub, source.adapter, catalog=self.catalog
         ).initialize(story)
@@ -68,6 +67,18 @@ class StoryApplication:
         self.manifest.save(user_id, story)
         return story
 
+    def load_current(self, user_id: str, story_id: str) -> Story:
+        return self._load_story(user_id, story_id)
+
+    def set_target(self, user_id: str, story_id: str, number: int) -> Story:
+        story = self._load_story(user_id, story_id)
+        target = next((c for c in story.chapters if c.number == int(number)), None)
+        if target is None:
+            raise ValueError(f"Unknown chapter: {number}")
+        story.target_chapter_number = target.number
+        self.state.save(story)
+        return story
+
     def _load_story(self, user_id: str, story_id: str) -> Story:
         state_story = self.state.load(story_id)
         if state_story is None:
@@ -82,6 +93,7 @@ class StoryApplication:
             if old is not None:
                 chapter.status = old.status
                 chapter.content_hash = old.content_hash
+        manifest_story.target_chapter_number = state_story.target_chapter_number
         state_story.chapters = manifest_story.chapters
         return state_story
 
@@ -92,7 +104,6 @@ def build_application(
     registry: AdapterRegistry | None = None,
     catalog: StoryCatalogEpubSink | None = None,
     resolution_root: str | Path | None = None,
-    registration_root: str | Path | None = None,
 ) -> StoryApplication:
     if registry is None:
         resolution_store = (
@@ -101,15 +112,9 @@ def build_application(
             else None
         )
         registry = default_registry(resolution_store)
-    registration = (
-        StoryRegistrationStore(registration_root)
-        if registration_root is not None
-        else None
-    )
     return StoryApplication(
         StoryStateStore(state_root),
         StoryManifestStore(manifest_root),
         registry,
         catalog,
-        registration,
     )
