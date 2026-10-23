@@ -6,10 +6,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -21,3 +24,7 @@ jobs:
       - name: Test Manifest Store
         run: |
           PYTHONPATH=. pytest -v tests/test_story_manifest.py
+
+      - name: Test Manifest Integration
+        run: |
+          PYTHONPATH=. pytest -v tests/test_application_manifest_integration.py
