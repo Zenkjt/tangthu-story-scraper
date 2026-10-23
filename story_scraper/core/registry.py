@@ -7,6 +7,7 @@ from .adapter import AdapterNotApplicable, SiteAdapter
 from .models import Story
 from .resolution import (
     AdapterResolutionStore,
+    KnownResolutionFailure,
     classify_resolution_failure,
     resolution_domain,
 )
@@ -21,14 +22,12 @@ class AdapterCandidate:
 
 @dataclass(frozen=True)
 class ResolvedStorySource:
-    """A story index together with the exact adapter instance that built it."""
-
     adapter: SiteAdapter
     story: Story
 
 
 class AdapterRegistry:
-    """Resolve URLs and persist global adapter-resolution telemetry."""
+    """Resolve URLs using known-good/known-failure coverage first."""
 
     def __init__(
         self,
@@ -88,15 +87,53 @@ class AdapterRegistry:
     def resolve(self, url: str) -> list[Type[SiteAdapter]]:
         return [candidate.adapter for candidate in self.candidates(url)]
 
+    def _check_known_failure(
+        self,
+        url: str,
+        candidates: list[AdapterCandidate],
+        force_recheck: bool,
+    ) -> None:
+        if self.resolution_store is None or force_recheck:
+            return
+
+        domain = resolution_domain(url)
+        failure = self.resolution_store.latest_failure(domain)
+        if failure is None:
+            return
+
+        failed_adapters = self.resolution_store.failed_adapters_since_latest_success(
+            domain
+        )
+        candidate_names = {candidate.adapter.name for candidate in candidates}
+
+        # A newly added adapter that matches this domain is a reason to retry.
+        if candidate_names - failed_adapters:
+            return
+
+        raise KnownResolutionFailure(
+            f"Known failure for {domain}: {failure.reason} "
+            f"(adapter={failure.adapter})"
+        )
+
     def resolve_instance(self, url: str) -> SiteAdapter:
         candidates = self.candidates(url)
         if not candidates:
             raise AdapterNotApplicable(f"No adapter matches URL: {url}")
         return candidates[0].adapter()
 
-    def resolve_source(self, url: str) -> ResolvedStorySource:
+    def resolve_source(
+        self,
+        url: str,
+        *,
+        force_recheck: bool = False,
+    ) -> ResolvedStorySource:
         candidates = self.candidates(url)
         domain = resolution_domain(url)
+
+        # Check the active failure list before doing any network/index work.
+        # An empty candidate list is also a known failure unless force_recheck
+        # is requested.
+        self._check_known_failure(url, candidates, force_recheck)
 
         if not candidates:
             if self.resolution_store is not None:
@@ -122,22 +159,22 @@ class AdapterRegistry:
                     )
                 return ResolvedStorySource(adapter=adapter, story=story)
             except AdapterNotApplicable as exc:
-                reason = "ADAPTER_NOT_APPLICABLE"
+                if self.resolution_store is not None:
+                    self.resolution_store.record(
+                        domain,
+                        candidate.adapter.name,
+                        "failure",
+                        "ADAPTER_NOT_APPLICABLE",
+                    )
+                rejected.append(f"{candidate.adapter.name}: {exc}")
+            except Exception as exc:
+                reason = classify_resolution_failure(exc)
                 if self.resolution_store is not None:
                     self.resolution_store.record(
                         domain,
                         candidate.adapter.name,
                         "failure",
                         reason,
-                    )
-                rejected.append(f"{candidate.adapter.name}: {exc}")
-            except Exception as exc:
-                if self.resolution_store is not None:
-                    self.resolution_store.record(
-                        domain,
-                        candidate.adapter.name,
-                        "failure",
-                        classify_resolution_failure(exc),
                     )
                 raise
 
@@ -146,8 +183,13 @@ class AdapterRegistry:
             f"No registered adapter accepted URL: {url} ({detail})"
         )
 
-    def build_index(self, url: str) -> Story:
-        return self.resolve_source(url).story
+    def build_index(
+        self,
+        url: str,
+        *,
+        force_recheck: bool = False,
+    ) -> Story:
+        return self.resolve_source(url, force_recheck=force_recheck).story
 
 
 def default_registry(
@@ -160,11 +202,7 @@ def default_registry(
     )
 
     return AdapterRegistry(
-        [
-            WattpadAdapter,
-            VnThuQuanAdapter,
-            StaticHTMLFamilyAdapter,
-        ],
+        [WattpadAdapter, VnThuQuanAdapter, StaticHTMLFamilyAdapter],
         resolution_store=resolution_store,
     )
 
@@ -172,12 +210,23 @@ def default_registry(
 def build_story_source(
     url: str,
     resolution_store: AdapterResolutionStore | None = None,
+    *,
+    force_recheck: bool = False,
 ) -> ResolvedStorySource:
-    return default_registry(resolution_store).resolve_source(url)
+    return default_registry(resolution_store).resolve_source(
+        url,
+        force_recheck=force_recheck,
+    )
 
 
 def build_story_index(
     url: str,
     resolution_store: AdapterResolutionStore | None = None,
+    *,
+    force_recheck: bool = False,
 ) -> Story:
-    return build_story_source(url, resolution_store).story
+    return build_story_source(
+        url,
+        resolution_store,
+        force_recheck=force_recheck,
+    ).story

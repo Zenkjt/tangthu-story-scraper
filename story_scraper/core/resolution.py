@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import socket
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -19,11 +18,12 @@ class AdapterResolutionRecord:
     timestamp: str
 
 
-class AdapterResolutionStore:
-    """Global, append-only adapter resolution history.
+class KnownResolutionFailure(RuntimeError):
+    """Raised when a domain is already known to be unsupported."""
 
-    This store is intentionally independent of user/story state.
-    """
+
+class AdapterResolutionStore:
+    """Global, append-only adapter resolution history."""
 
     def __init__(self, path: str | Path):
         self.path = Path(path)
@@ -52,16 +52,72 @@ class AdapterResolutionStore:
             return []
         result: list[AdapterResolutionRecord] = []
         for line in self.path.read_text(encoding="utf-8").splitlines():
-            if not line.strip():
-                continue
-            result.append(AdapterResolutionRecord(**json.loads(line)))
+            if line.strip():
+                result.append(AdapterResolutionRecord(**json.loads(line)))
         return result
 
-    def latest_success(self, domain: str) -> str | None:
+    def latest(self, domain: str) -> AdapterResolutionRecord | None:
         for item in reversed(self.records()):
-            if item.domain == domain and item.result == "success":
-                return item.adapter
+            if item.domain == domain:
+                return item
         return None
+
+    def latest_success(self, domain: str) -> str | None:
+        item = self.latest(domain)
+        if item is not None and item.result == "success":
+            return item.adapter
+        return None
+
+    def latest_failure(self, domain: str) -> AdapterResolutionRecord | None:
+        item = self.latest(domain)
+        if item is not None and item.result == "failure":
+            return item
+        return None
+
+    def failed_adapters_since_latest_success(self, domain: str) -> set[str]:
+        items = [item for item in self.records() if item.domain == domain]
+        failed: set[str] = set()
+        for item in reversed(items):
+            if item.result == "success":
+                break
+            if item.result == "failure":
+                failed.add(item.adapter)
+        return failed
+
+    def known_good(self) -> dict[str, AdapterResolutionRecord]:
+        latest_by_domain: dict[str, AdapterResolutionRecord] = {}
+        for item in self.records():
+            latest_by_domain[item.domain] = item
+        return {
+            domain: item
+            for domain, item in latest_by_domain.items()
+            if item.result == "success"
+        }
+
+    def known_failures(self) -> dict[str, AdapterResolutionRecord]:
+        latest_by_domain: dict[str, AdapterResolutionRecord] = {}
+        for item in self.records():
+            latest_by_domain[item.domain] = item
+        return {
+            domain: item
+            for domain, item in latest_by_domain.items()
+            if item.result == "failure"
+        }
+
+    def coverage(self) -> dict[str, dict[str, str]]:
+        latest_by_domain: dict[str, AdapterResolutionRecord] = {}
+        for item in self.records():
+            latest_by_domain[item.domain] = item
+
+        return {
+            domain: {
+                "status": "known_good" if item.result == "success" else "known_failure",
+                "adapter": item.adapter,
+                "reason": item.reason,
+                "timestamp": item.timestamp,
+            }
+            for domain, item in latest_by_domain.items()
+        }
 
 
 def resolution_domain(url: str) -> str:
