@@ -1,77 +1,51 @@
-# ADAPTER COVERAGE / FAILURE-FIRST — PHASE 5
+# ADAPTER COVERAGE — PHASE 5 (FAILURE-FIRST)
 
 Date: 2026-10-23
 
 ## Decision
 
-Before expanding the adapter catalog, resolution becomes **failure-first**.
+Resolution is now checked against the global coverage history before doing
+network/index work.
 
-For a new story registration:
+Coverage has three states:
+- `good`
+- `failure`
+- `unknown`
 
-1. Check the global resolution history by domain.
-2. If the domain is a known active failure and no new matching adapter exists,
-   return the known failure immediately.
-3. Do not perform another network/index operation in that case.
-4. If a newly added adapter matches the failed domain, automatically re-check.
-5. A successful re-check makes the domain `known_good`.
-6. Historical failure records are retained.
+## Fast path
 
-## Result classes
+If a domain is in the active failure state, resolution returns immediately
+with the recorded reason. No adapter/network probing is performed.
 
-The coverage report separates domains into:
+If a domain is known good, its successful adapter is prioritized and normal
+resolution still verifies it.
 
-- `known_good`
-- `known_failure`
+Unknown domains use the normal adapter chain:
+VnThuQuan -> Wattpad -> StaticHTMLFamily according to registry priority.
 
-A domain with no history is simply unknown and is not included until checked.
+## Failure lifecycle
 
-## Initial adapter coverage
+Historical records are append-only.
 
-The first coverage pass focuses on:
+The active state is determined by the latest record for the domain:
+- latest success -> Known Good
+- latest failure -> Known Failure
 
-- VnThuQuanAdapter
-- WattpadAdapter
-- StaticHTMLFamilyAdapter / generic family coverage
+When a new adapter later succeeds for a failed domain, the domain automatically
+leaves the active failure list while the old failure history remains.
 
-We do not immediately implement new adapters for every failure.
+## UI
 
-## Failure backlog
-
-`known_failure` becomes the active adapter-development backlog.
-
-When a new adapter is added and successfully resolves a failed domain:
-
-- the domain leaves the active failure list;
-- the historical failure remains in the append-only log.
-
-## Fast user experience
-
-The failure-first lookup is intended for the story-registration UI.
-
-The UI can expose:
-
+The registration UI can expose:
 - Known Good List
 - Failure List
-- failure reason
-- adapter responsible for the latest result
 
-A user registering a known-failed domain can therefore receive an immediate,
-meaningful result instead of waiting for a network attempt.
+Failure entries show domain, adapter, reason and timestamp.
 
-## Safety
+## Data ownership
 
-A cached failure is not permanent. A matching newly registered adapter causes
-a re-check automatically.
-
-`force_recheck=True` is also available for explicit validation/maintenance.
-
-## Ownership
-
-- Manifest = per-user/per-story chapter index.
-- Story State = runtime state.
-- `0neStory.epub` = content.
-- `0neStoryTOC.epub` = navigation/index.
-- Adapter Resolution Registry = global coverage/history.
+Manifest Store remains unchanged and continues to own per-user/per-story
+chapter index metadata. Adapter coverage is global system-level telemetry.
 
 ## Invariant
 
