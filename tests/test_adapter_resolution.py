@@ -110,7 +110,7 @@ def test_real_failure_is_recorded_and_reraised(tmp_path: Path):
         resolution_store=store,
     )
 
-    with pytest.raises(RuntimeError, match="network timeout"):
+    with pytest.raises(TimeoutError, match="network timeout"):
         registry.resolve_source("https://example.test/story")
 
     records = store.records()
