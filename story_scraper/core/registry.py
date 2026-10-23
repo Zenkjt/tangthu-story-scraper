@@ -62,10 +62,16 @@ class AdapterRegistry:
         return candidates[0].adapter()
 
     def resolve_source(self, url: str) -> ResolvedStorySource:
+        return self._resolve_source(url, bypass_failure_cache=False)
+
+    def recheck_source(self, url: str) -> ResolvedStorySource:
+        """Maintenance-only resolution that bypasses the active failure fast-path."""
+        return self._resolve_source(url, bypass_failure_cache=True)
+
+    def _resolve_source(self, url: str, bypass_failure_cache: bool) -> ResolvedStorySource:
         domain = resolution_domain(url)
 
-        # Fast path: a known terminal failure answers immediately.
-        if self.resolution_store is not None:
+        if not bypass_failure_cache and self.resolution_store is not None:
             coverage = self.resolution_store.coverage(domain)
             if coverage.status == "failure":
                 raise AdapterNotApplicable(
@@ -75,7 +81,9 @@ class AdapterRegistry:
         candidates = self.candidates(url)
         if not candidates:
             if self.resolution_store is not None:
-                self.resolution_store.record(domain, "__registry__", "failure", "NO_MATCHING_ADAPTER")
+                self.resolution_store.record(
+                    domain, "__registry__", "failure", "NO_MATCHING_ADAPTER", url=url
+                )
             raise AdapterNotApplicable(f"No adapter matches URL: {url}")
 
         rejected = []
@@ -84,20 +92,29 @@ class AdapterRegistry:
             try:
                 story = adapter.build_index(url)
                 if self.resolution_store is not None:
-                    self.resolution_store.record(domain, candidate.adapter.name, "success", "RESOLVED")
+                    self.resolution_store.record(
+                        domain, candidate.adapter.name, "success", "RESOLVED", url=url
+                    )
                 return ResolvedStorySource(adapter, story)
             except AdapterNotApplicable as exc:
                 if self.resolution_store is not None:
-                    self.resolution_store.record(domain, candidate.adapter.name, "failure", "ADAPTER_NOT_APPLICABLE")
+                    self.resolution_store.record(
+                        domain, candidate.adapter.name, "failure",
+                        "ADAPTER_NOT_APPLICABLE", url=url
+                    )
                 rejected.append(f"{candidate.adapter.name}: {exc}")
             except Exception as exc:
                 if self.resolution_store is not None:
-                    self.resolution_store.record(domain, candidate.adapter.name, "failure",
-                                                  classify_resolution_failure(exc))
+                    self.resolution_store.record(
+                        domain, candidate.adapter.name, "failure",
+                        classify_resolution_failure(exc), url=url
+                    )
                 raise
 
         if self.resolution_store is not None:
-            self.resolution_store.record(domain, "__registry__", "failure", "UNSUPPORTED_STRUCTURE")
+            self.resolution_store.record(
+                domain, "__registry__", "failure", "UNSUPPORTED_STRUCTURE", url=url
+            )
         raise AdapterNotApplicable(
             f"No registered adapter accepted URL: {url} ({'; '.join(rejected)})"
         )

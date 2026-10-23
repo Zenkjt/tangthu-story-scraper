@@ -16,6 +16,7 @@ class AdapterResolutionRecord:
     result: str
     reason: str
     timestamp: str
+    url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,7 @@ class AdapterCoverage:
     adapter: str | None = None
     reason: str | None = None
     timestamp: str | None = None
+    url: str | None = None
 
 
 class AdapterResolutionStore:
@@ -34,13 +36,13 @@ class AdapterResolutionStore:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
-    def record(self, domain: str, adapter: str, result: str, reason: str) -> AdapterResolutionRecord:
+    def record(
+        self, domain: str, adapter: str, result: str, reason: str,
+        url: str | None = None,
+    ) -> AdapterResolutionRecord:
         item = AdapterResolutionRecord(
-            domain=domain,
-            adapter=adapter,
-            result=result,
-            reason=reason,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            domain=domain, adapter=adapter, result=result, reason=reason,
+            timestamp=datetime.now(timezone.utc).isoformat(), url=url,
         )
         with self.path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(asdict(item), ensure_ascii=False) + "\n")
@@ -66,12 +68,8 @@ class AdapterResolutionStore:
         if item is None:
             return AdapterCoverage(domain, "unknown")
         if item.result == "success":
-            return AdapterCoverage(
-                domain, "good", item.adapter, item.reason, item.timestamp
-            )
-        return AdapterCoverage(
-            domain, "failure", item.adapter, item.reason, item.timestamp
-        )
+            return AdapterCoverage(domain, "good", item.adapter, item.reason, item.timestamp, item.url)
+        return AdapterCoverage(domain, "failure", item.adapter, item.reason, item.timestamp, item.url)
 
     def known_good(self, domain: str) -> bool:
         return self.coverage(domain).status == "good"
