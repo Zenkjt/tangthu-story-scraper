@@ -9,11 +9,12 @@ from .core.models import Story
 from .core.registry import AdapterRegistry, ResolvedStorySource, default_registry
 from .core.resolution import AdapterResolutionStore
 from .core.state import StoryStateStore
+from .core.registration import StoryRegistrationStore
 from .story_catalog import StoryCatalogEpubSink
 
 
 class StoryApplication:
-    """Application entry point between state, manifest, catalog, and StoryEngine."""
+    """Application entry point between registration, state, manifest, catalog, and engine."""
 
     def __init__(
         self,
@@ -21,16 +22,30 @@ class StoryApplication:
         manifest: StoryManifestStore,
         registry: AdapterRegistry | None = None,
         catalog: StoryCatalogEpubSink | None = None,
+        registration: StoryRegistrationStore | None = None,
     ):
         self.state = state
         self.manifest = manifest
         self.registry = registry or default_registry()
         self.catalog = catalog
+        self.registration = registration
 
     def initialize(self, user_id: str, url: str, epub: EpubSink) -> Story:
+        return self.register(user_id, url, epub)
+
+    def register(self, user_id: str, url: str, epub: EpubSink) -> Story:
+        if self.registration is not None:
+            existing_id = self.registration.get(user_id, url)
+            if existing_id is not None:
+                existing = self._load_story(user_id, existing_id)
+                return existing
+
         source: ResolvedStorySource = self.registry.resolve_source(url)
         story = source.story
         self.manifest.save(user_id, story)
+        if self.registration is not None:
+            self.registration.register(user_id, url, story.story_id)
+
         return StoryEngine(
             self.state, epub, source.adapter, catalog=self.catalog
         ).initialize(story)
@@ -77,6 +92,7 @@ def build_application(
     registry: AdapterRegistry | None = None,
     catalog: StoryCatalogEpubSink | None = None,
     resolution_root: str | Path | None = None,
+    registration_root: str | Path | None = None,
 ) -> StoryApplication:
     if registry is None:
         resolution_store = (
@@ -85,9 +101,15 @@ def build_application(
             else None
         )
         registry = default_registry(resolution_store)
+    registration = (
+        StoryRegistrationStore(registration_root)
+        if registration_root is not None
+        else None
+    )
     return StoryApplication(
         StoryStateStore(state_root),
         StoryManifestStore(manifest_root),
         registry,
         catalog,
+        registration,
     )
