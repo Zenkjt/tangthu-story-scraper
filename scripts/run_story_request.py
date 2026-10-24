@@ -5,8 +5,9 @@ import json
 import os
 import re
 from datetime import datetime, timezone
+from html import unescape
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urljoin
 from urllib.request import Request, urlopen
 
 from story_scraper.application import build_application
@@ -21,6 +22,9 @@ STATE_ROOT = WORK / "state"
 MANIFEST_ROOT = WORK / "manifest"
 RESOLUTION_ROOT = WORK / "resolution.jsonl"
 
+REPO = "Zenkjt/tangthu-story-scraper"
+CACHE_ROOT = "story-cache"
+
 
 def gh_headers() -> dict[str, str]:
     return {
@@ -33,7 +37,7 @@ def gh_headers() -> dict[str, str]:
 
 def gh_get(path: str) -> dict:
     req = Request(
-        f"https://api.github.com/repos/Zenkjt/tangthu-story-scraper/{path}",
+        f"https://api.github.com/repos/{REPO}/{path}",
         headers=gh_headers(),
     )
     with urlopen(req, timeout=30) as response:
@@ -49,7 +53,7 @@ def github_put(path: str, payload: dict, message: str) -> None:
 
 
 def github_put_bytes(path: str, content: bytes, message: str) -> None:
-    api = f"https://api.github.com/repos/Zenkjt/tangthu-story-scraper/contents/{path}"
+    api = f"https://api.github.com/repos/{REPO}/contents/{path}"
     sha = None
     try:
         req = Request(api + "?ref=main", headers=gh_headers())
@@ -76,22 +80,41 @@ def github_put_bytes(path: str, content: bytes, message: str) -> None:
         pass
 
 
-def read_request(request_id: str) -> dict:
-    meta = gh_get(f"contents/story-cache/requests/{request_id}.json?ref=main")
+def read_cache_json(path: str) -> dict:
+    meta = gh_get(f"contents/{path}?ref=main")
     return json.loads(
         base64.b64decode(meta["content"].replace("\n", "")).decode("utf-8")
     )
+
+
+def read_request(request_id: str) -> dict:
+    return read_cache_json(f"{CACHE_ROOT}/requests/{request_id}.json")
 
 
 def safe(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]", "_", str(value or "")) or "unknown"
 
 
-def story_view(story: Story) -> dict:
+def cover_cache_dir(user_id: str, story_id: str) -> str:
+    return f"{CACHE_ROOT}/{safe(user_id)}/{safe(story_id)}"
+
+
+def raw_cover_url(user_id: str, story_id: str, ext: str) -> str:
+    return (
+        f"https://raw.githubusercontent.com/{REPO}/main/"
+        f"{cover_cache_dir(user_id, story_id)}/cover{ext}"
+    )
+
+
+def story_view(
+    story: Story,
+    user_id: str | None = None,
+    cover_ext: str | None = None,
+) -> dict:
     chapters = sorted(story.chapters, key=lambda c: c.number)
     current = story.target_chapter_number
     current_chapter = next((c for c in chapters if c.number == current), None)
-    return {
+    result = {
         "story_id": story.story_id,
         "title": story.title,
         "author": story.author,
@@ -111,6 +134,9 @@ def story_view(story: Story) -> dict:
         ],
         "status": "ready",
     }
+    if user_id and cover_ext:
+        result["cover_url"] = raw_cover_url(user_id, story.story_id, cover_ext)
+    return result
 
 
 def update_operation(
@@ -118,36 +144,157 @@ def update_operation(
     status: str,
     message: str,
     story: Story | None = None,
+    cover_ext: str | None = None,
 ) -> None:
     request["status"] = status
     request["message"] = message
     request["updated_at"] = datetime.now(timezone.utc).isoformat()
     if story is not None:
         request["story_id"] = story.story_id
-        request["story"] = story_view(story)
+        request["story"] = story_view(
+            story,
+            request.get("user_id"),
+            cover_ext,
+        )
     github_put(
-        f"story-cache/requests/{request['request_id']}.json",
+        f"{CACHE_ROOT}/requests/{request['request_id']}.json",
         request,
         f"story: {status} {request['request_id']}",
     )
 
 
-def cache_story(user_id: str, story: Story) -> None:
+def cached_cover_ext(user_id: str, story_id: str) -> str | None:
+    try:
+        data = read_cache_json(
+            f"{cover_cache_dir(user_id, story_id)}/story.json"
+        )
+        value = str(data.get("cover_ext") or "").strip()
+        return value or None
+    except Exception:
+        return None
+
+
+def cache_story(
+    user_id: str,
+    story: Story,
+    cover_ext: str | None = None,
+) -> str | None:
+    path = f"{cover_cache_dir(user_id, story.story_id)}/story.json"
+    if cover_ext is None:
+        cover_ext = cached_cover_ext(user_id, story.story_id)
+
+    data = {
+        "schema_version": 1,
+        **story.as_dict(),
+    }
+    if cover_ext:
+        data["cover_ext"] = cover_ext
+
     github_put(
-        f"story-cache/{safe(user_id)}/{safe(story.story_id)}/story.json",
-        {"schema_version": 1, **story.as_dict()},
+        path,
+        data,
         f"story: update cache {user_id}/{story.story_id}",
     )
+    return cover_ext
 
 
 def hydrate_cached_story(user_id: str, story_id: str) -> Story:
-    meta = gh_get(
-        f"contents/story-cache/{safe(user_id)}/{safe(story_id)}/story.json?ref=main"
-    )
-    data = json.loads(
-        base64.b64decode(meta["content"].replace("\n", "")).decode("utf-8")
+    data = read_cache_json(
+        f"{cover_cache_dir(user_id, story_id)}/story.json"
     )
     return Story.from_dict(data)
+
+
+def set_current_story(user_id: str, story_id: str) -> None:
+    github_put(
+        f"{CACHE_ROOT}/{safe(user_id)}/current.json",
+        {
+            "schema_version": 1,
+            "story_id": story_id,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+        f"story: set current {user_id}/{story_id}",
+    )
+
+
+def extract_meta(html: str, name: str) -> str | None:
+    pattern = re.compile(
+        rf'<meta[^>]+(?:property|name)\s*=\s*["\']{re.escape(name)}["\'][^>]+content\s*=\s*["\']([^"\']+)',
+        re.I,
+    )
+    match = pattern.search(html)
+    if match:
+        return unescape(match.group(1).strip())
+
+    pattern = re.compile(
+        rf'<meta[^>]+content\s*=\s*["\']([^"\']+)["\'][^>]+(?:property|name)\s*=\s*["\']{re.escape(name)}["\']',
+        re.I,
+    )
+    match = pattern.search(html)
+    return unescape(match.group(1).strip()) if match else None
+
+
+def discover_cover_url(source_url: str) -> str | None:
+    request = Request(
+        source_url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)",
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Encoding": "identity",
+        },
+    )
+    with urlopen(request, timeout=30) as response:
+        html = response.read().decode("utf-8", errors="ignore")
+        final_url = response.geturl()
+
+    for key in ("og:image", "twitter:image", "twitter:image:src"):
+        value = extract_meta(html, key)
+        if value:
+            return urljoin(final_url, value)
+    return None
+
+
+def download_cover(url: str) -> tuple[bytes, str]:
+    request = Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)",
+            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        },
+    )
+    with urlopen(request, timeout=60) as response:
+        content = response.read()
+        content_type = str(response.headers.get("Content-Type") or "").lower()
+
+    if "png" in content_type:
+        ext = ".png"
+    elif "webp" in content_type:
+        ext = ".webp"
+    elif "gif" in content_type:
+        ext = ".gif"
+    else:
+        ext = ".jpg"
+
+    return content, ext
+
+
+def cache_cover(user_id: str, story: Story) -> str | None:
+    try:
+        cover_url = discover_cover_url(story.source_url)
+        if not cover_url:
+            print("Cover: không tìm thấy og:image/twitter:image; tiếp tục không có bìa.")
+            return cached_cover_ext(user_id, story.story_id)
+
+        content, ext = download_cover(cover_url)
+        github_put_bytes(
+            f"{cover_cache_dir(user_id, story.story_id)}/cover{ext}",
+            content,
+            f"story: cache cover {user_id}/{story.story_id}",
+        )
+        return ext
+    except Exception as exc:
+        print(f"Cover: không tải được ({exc}); tiếp tục không có bìa.")
+        return cached_cover_ext(user_id, story.story_id)
 
 
 def drive_files(folder_id: str) -> list[dict]:
@@ -208,10 +355,7 @@ def update_source_coverage() -> None:
     store = AdapterResolutionStore(RESOLUTION_ROOT)
     current = {}
     try:
-        meta = gh_get("contents/story-cache/story-sources.json?ref=main")
-        current = json.loads(
-            base64.b64decode(meta["content"].replace("\n", "")).decode("utf-8")
-        )
+        current = read_cache_json(f"{CACHE_ROOT}/story-sources.json")
     except Exception:
         pass
 
@@ -235,7 +379,7 @@ def update_source_coverage() -> None:
         }
 
     github_put(
-        "story-cache/story-sources.json",
+        f"{CACHE_ROOT}/story-sources.json",
         {
             "schema_version": 1,
             "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -303,7 +447,10 @@ def main() -> int:
                 catalog=catalog,
             )
 
-            cache_story(user_id, story)
+            cover_ext = cache_cover(user_id, story)
+            cache_story(user_id, story, cover_ext)
+            set_current_story(user_id, story.story_id)
+
             upload_drive(
                 folder_id,
                 "0neStoryTOC.epub",
@@ -315,6 +462,7 @@ def main() -> int:
                 "completed",
                 "Đăng ký truyện thành công.",
                 story,
+                cover_ext,
             )
             update_source_coverage()
             return 0
@@ -323,17 +471,20 @@ def main() -> int:
             raise RuntimeError("Thiếu story_id")
 
         story = hydrate_cached_story(user_id, story_id)
+        cover_ext = cached_cover_ext(user_id, story_id)
         app.state.save(story)
         app.manifest.save(user_id, story)
 
         if action == "previous":
             story = app.trigger_previous(user_id, story_id, _NullSink())
-            cache_story(user_id, story)
+            cache_story(user_id, story, cover_ext)
+            set_current_story(user_id, story.story_id)
             update_operation(
                 request,
                 "completed",
                 "Đã chuyển về chương trước.",
                 story,
+                cover_ext,
             )
             return 0
 
@@ -343,12 +494,14 @@ def main() -> int:
                 story_id,
                 int(request["chapter_number"]),
             )
-            cache_story(user_id, story)
+            cache_story(user_id, story, cover_ext)
+            set_current_story(user_id, story.story_id)
             update_operation(
                 request,
                 "completed",
                 "Đã chọn chương.",
                 story,
+                cover_ext,
             )
             return 0
 
@@ -367,7 +520,9 @@ def main() -> int:
                 story_sink,
             )
 
-            cache_story(user_id, story)
+            cache_story(user_id, story, cover_ext)
+            set_current_story(user_id, story.story_id)
+
             upload_drive(
                 folder_id,
                 "0neStory.epub",
@@ -379,6 +534,7 @@ def main() -> int:
                 "completed",
                 "Đã tải/cập nhật chương.",
                 story,
+                cover_ext,
             )
             update_source_coverage()
             return 0
