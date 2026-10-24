@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://truyenfull.live/than-dao-dan-ton-6060282/chuong-1/",
   "chapter_number": null,
-  "status": "queued",
-  "message": "Đã xếp hàng xử lý.",
+  "status": "running",
+  "message": "Đang xử lý: register.",
   "created_at": "2026-10-24T14:20:53.296Z",
-  "updated_at": "2026-10-24T14:20:53.296Z"
+  "updated_at": "2026-10-24T14:21:08.067015+00:00"
 }
