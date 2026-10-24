@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://truyenfull.live/than-dao-dan-ton-6060282/",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "failed",
+  "message": "Unsupported mutation",
   "created_at": "2026-10-24T22:52:47.362Z",
-  "updated_at": "2026-10-24T22:53:01.939021+00:00"
+  "updated_at": "2026-10-24T22:58:16.383503+00:00"
 }
