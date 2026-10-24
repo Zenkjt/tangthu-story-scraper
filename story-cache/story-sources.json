@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-24T13:27:31.915828+00:00",
+  "sources": [
+    {
+      "domain": "truyenfull.live",
+      "status": "fail",
+      "adapter": "static-html-family",
+      "reason": "HTTP_403",
+      "timestamp": "2026-10-24T13:27:30.578894+00:00",
+      "message": "HTTP_403"
+    }
+  ]
+}
