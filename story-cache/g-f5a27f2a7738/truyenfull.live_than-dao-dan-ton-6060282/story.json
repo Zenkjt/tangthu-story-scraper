@@ -42751,5 +42751,6 @@
       "external_id": null
     }
   ],
-  "target_chapter_number": 1
+  "target_chapter_number": 1,
+  "cover_ext": ".jpg"
 }
