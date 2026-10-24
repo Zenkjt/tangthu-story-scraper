@@ -1,208 +1,308 @@
 from __future__ import annotations
 
+import threading
 import tkinter as tk
-from pathlib import Path
-from tkinter import filedialog, messagebox, simpledialog, ttk
+from tkinter import ttk
 
+from .core.bookshelf import BookshelfBackend, BookshelfRegistration
+from .core.application_flow import BookshelfWriteError, StoryRegistrationFlow
 from .application import build_application
-from .core.application_flow import BookshelfStoryFlow, StoryReplacementRequired
+
+
+class Bulletin:
+    """Persistent notification panel. It never auto-closes."""
+
+    def __init__(self, parent: tk.Misc):
+        self.window = tk.Toplevel(parent)
+        self.window.title("Bảng tin")
+        self.window.geometry("560x260")
+        self.window.resizable(True, True)
+        self.window.transient(parent)
+
+        header = ttk.Frame(self.window)
+        header.pack(fill="x", padx=8, pady=8)
+        ttk.Label(header, text="BẢNG TIN", font=("TkDefaultFont", 11, "bold")).pack(
+            side="left"
+        )
+        ttk.Button(header, text="X", width=3, command=self.window.destroy).pack(
+            side="right"
+        )
+
+        body = ttk.Frame(self.window)
+        body.pack(fill="both", expand=True, padx=8, pady=(0, 8))
+        self.text = tk.Text(body, wrap="word", state="disabled")
+        scroll = ttk.Scrollbar(body, command=self.text.yview)
+        self.text.configure(yscrollcommand=scroll.set)
+        self.text.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
+
+    def add(self, message: str):
+        self.text.configure(state="normal")
+        self.text.insert("end", f"• {message}\n\n")
+        self.text.see("end")
+        self.text.configure(state="disabled")
 
 
 class StoryBookshelfGUI:
-    """Minimal Tk GUI for Phase 9 bookshelf/story registration flow."""
+    """Phase 9 desktop GUI.
 
-    def __init__(self, root: tk.Tk, *, user_id: str = "local-user"):
+    No bookshelf registration state is stored in the user's Drive folder.
+    """
+
+    def __init__(
+        self,
+        root: tk.Tk,
+        *,
+        bookshelf_backend: BookshelfBackend,
+        state_root,
+        manifest_root,
+        resolution_root,
+        artifact_root,
+        cover_path,
+    ):
         self.root = root
-        self.user_id = user_id
-        self.folder = tk.StringVar()
-        self.bookshelf_name = tk.StringVar(value="")
+        self.backend = bookshelf_backend
+        self.bulletin: Bulletin | None = None
+        self.registration: BookshelfRegistration | None = None
+        self.story = None
+
+        self.folder_url = tk.StringVar()
         self.story_url = tk.StringVar()
-        self.status = tk.StringVar(value="Chưa đăng ký tủ sách")
-        self.story_title = tk.StringVar(value="")
-        self.reading = tk.StringVar(value="")
-        self._story = None
-        self._flow: BookshelfStoryFlow | None = None
+        self.info = tk.StringVar(value="Chưa đăng ký nội dung đọc")
+        self.shelf_info = tk.StringVar(value="")
+        self.chapter_info = tk.StringVar(value="")
+        self._flow = StoryRegistrationFlow(
+            build_application(
+                state_root,
+                manifest_root,
+                resolution_root=resolution_root,
+            ),
+            bookshelf_backend,
+            artifact_root,
+            cover_path,
+            notify=self._notify,
+        )
 
         self._build()
-        self._sync_controls()
+        self._sync()
 
     def _build(self):
-        self.root.title("Tàng Thư — 0neStory")
-        self.root.geometry("760x300")
-        self.root.columnconfigure(1, weight=1)
+        self.root.title("Đăng ký đọc online")
+        self.root.geometry("760x620")
+        self.root.minsize(650, 500)
 
-        ttk.Label(self.root, text="Tủ sách:").grid(row=0, column=0, sticky="w", padx=10, pady=8)
-        ttk.Label(self.root, textvariable=self.bookshelf_name).grid(row=0, column=1, columnspan=2, sticky="w")
+        toolbar = ttk.Frame(self.root)
+        toolbar.pack(fill="x", padx=10, pady=8)
+        ttk.Button(toolbar, text="?", width=3, command=self._help).pack(side="right")
+        ttk.Button(toolbar, text="X", width=3, command=self.root.destroy).pack(side="right", padx=(6, 0))
+        ttk.Label(toolbar, text="Đăng ký đọc online", font=("TkDefaultFont", 13, "bold")).pack(side="left")
 
-        ttk.Label(self.root, text="Thư mục nhận sách:").grid(row=1, column=0, sticky="w", padx=10, pady=8)
-        ttk.Entry(self.root, textvariable=self.folder).grid(row=1, column=1, sticky="ew", padx=4)
-        self.register_button = ttk.Button(self.root, text="Đăng ký", command=self.register_folder)
-        self.register_button.grid(row=1, column=2, padx=10)
-
-        ttk.Label(self.root, text="Link truyện:").grid(row=2, column=0, sticky="w", padx=10, pady=8)
-        self.url_entry = ttk.Entry(self.root, textvariable=self.story_url)
-        self.url_entry.grid(row=2, column=1, columnspan=2, sticky="ew", padx=4)
-
-        self.browse_button = ttk.Button(self.root, text="Duyệt sách", command=self.browse)
-        self.browse_button.grid(row=3, column=1, sticky="w", padx=4, pady=10)
-
-        ttk.Separator(self.root).grid(row=4, column=0, columnspan=3, sticky="ew", padx=10, pady=4)
-        ttk.Label(self.root, textvariable=self.story_title, font=("TkDefaultFont", 11, "bold")).grid(
-            row=5, column=0, columnspan=3, sticky="w", padx=10, pady=5
+        info_box = ttk.LabelFrame(self.root, text="THÔNG TIN")
+        info_box.pack(fill="x", padx=10, pady=6)
+        ttk.Label(info_box, textvariable=self.info, justify="left", wraplength=700).pack(
+            fill="x", padx=10, pady=10
         )
-        ttk.Label(self.root, textvariable=self.reading).grid(row=6, column=0, columnspan=3, sticky="w", padx=10)
+        ttk.Label(info_box, textvariable=self.shelf_info, justify="left").pack(
+            fill="x", padx=10, pady=(0, 8)
+        )
+        ttk.Label(info_box, textvariable=self.chapter_info).pack(
+            fill="x", padx=10, pady=(0, 10)
+        )
 
         nav = ttk.Frame(self.root)
-        nav.grid(row=7, column=0, columnspan=3, sticky="w", padx=10, pady=12)
-        self.prev_button = ttk.Button(nav, text="Lùi", command=self.previous)
-        self.prev_button.pack(side="left", padx=(0, 6))
-        self.next_button = ttk.Button(nav, text="Tiến", command=self.next)
-        self.next_button.pack(side="left", padx=6)
-        self.jump_button = ttk.Button(nav, text="Nhảy chương", command=self.jump)
-        self.jump_button.pack(side="left", padx=6)
-        self.get_button = ttk.Button(nav, text="Tải chương", command=self.get_chapter)
-        self.get_button.pack(side="left", padx=6)
+        nav.pack(fill="x", padx=10, pady=8)
+        self.prev_btn = ttk.Button(nav, text="< Chương trước", command=lambda: self._move(-1))
+        self.prev_btn.pack(side="left")
+        self.jump = ttk.Combobox(nav, width=18, state="disabled")
+        self.jump.pack(side="left", padx=8)
+        self.jump.bind("<<ComboboxSelected>>", self._jump)
+        self.next_btn = ttk.Button(nav, text="Chương sau >", command=lambda: self._move(1))
+        self.next_btn.pack(side="left")
 
-        ttk.Label(self.root, textvariable=self.status).grid(row=8, column=0, columnspan=3, sticky="w", padx=10)
+        story_box = ttk.LabelFrame(self.root, text="Link truyện")
+        story_box.pack(fill="x", padx=10, pady=6)
+        row = ttk.Frame(story_box)
+        row.pack(fill="x", padx=8, pady=8)
+        self.story_entry = ttk.Entry(row, textvariable=self.story_url)
+        self.story_entry.pack(side="left", fill="x", expand=True)
+        self.register_btn = ttk.Button(row, text="Đăng ký", command=self._register_story)
+        self.register_btn.pack(side="left", padx=(8, 0))
 
-    def choose_folder(self):
-        selected = filedialog.askdirectory(title="Chọn thư mục nhận sách")
-        if selected:
-            self.folder.set(selected)
-            self.register_folder()
+        shelf_box = ttk.LabelFrame(self.root, text="Thư mục nhận sách")
+        shelf_box.pack(fill="x", padx=10, pady=6)
+        self.folder_entry = ttk.Entry(shelf_box, textvariable=self.folder_url)
+        self.folder_entry.pack(fill="x", padx=8, pady=8)
+        self.folder_entry.bind("<KeyRelease>", self._folder_changed)
 
-    def register_folder(self):
-        folder = self.folder.get().strip()
-        if not folder:
-            self.status.set("Chưa chọn thư mục nhận sách")
+    def _notify(self, message: str):
+        def update():
+            if self.bulletin is None or not self.bulletin.window.winfo_exists():
+                self.bulletin = Bulletin(self.root)
+            self.bulletin.add(message)
+        self.root.after(0, update)
+
+    def _folder_changed(self, _event=None):
+        url = self.folder_url.get().strip()
+        self.registration = None
+        self.info.set("Đang kiểm tra tủ nhận sách..." if url else "Chưa đăng ký nội dung đọc")
+        self._sync()
+        if not url:
             return
-        try:
-            flow = self._flow_for(folder)
-            registration = flow.register_bookshelf(folder)
-            self.bookshelf_name.set(registration.name)
-            self._load_existing(registration)
-            self.status.set(f"Đã đăng ký tủ sách: {registration.name}")
-        except Exception as exc:
-            messagebox.showerror("Đăng ký thất bại", str(exc))
-        self._sync_controls()
 
-    def browse(self):
-        folder = self.folder.get().strip()
-        if not folder:
+        def worker():
+            try:
+                registration = self.backend.inspect(url)
+            except Exception as exc:
+                self.root.after(0, lambda: self._folder_error(str(exc)))
+                return
+            self.root.after(0, lambda: self._folder_result(registration))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _folder_result(self, registration):
+        self.registration = registration
+        if registration is None:
+            self.info.set(
+                "Không có thông tin tủ. Yêu cầu lập tủ sách để nhận sách."
+            )
+        else:
+            permission = (
+                " · quyền ghi: có"
+                if registration.can_edit is True
+                else " · quyền ghi: chưa xác định"
+                if registration.can_edit is None
+                else " · quyền ghi: không có"
+            )
+            self.info.set(f"Đã nhận ra tủ: {registration.name}{permission}")
+            self.shelf_info.set(
+                f"Tủ nhận sách: {registration.name} · "
+                "0neStory.epub · 0neStoryTOC.epub"
+            )
+        self._sync()
+
+    def _folder_error(self, message):
+        self.registration = None
+        self.info.set(f"Không thể kiểm tra tủ nhận sách: {message}")
+        self._sync()
+
+    def _register_story(self):
+        if self.registration is None:
+            self._notify(
+                "Chưa có tủ nhận sách. Hãy đăng ký tủ sách Tàng Thư trước."
+            )
             return
         url = self.story_url.get().strip()
-        try:
-            flow = self._flow_for(folder)
-            registration = flow.load_registration(folder)
-            if registration is None:
-                raise ValueError("Chưa đăng ký tủ sách")
-
-            if registration.story_id and url:
-                replacement = messagebox.askyesno(
-                    "Đổi truyện",
-                    "Bạn muốn đổi sang truyện khác?\nTruyện hiện tại sẽ bị xóa?",
-                )
-                if not replacement:
-                    return
-                story = flow.confirm_replace(folder, url)
-            else:
-                story = flow.browse(folder, url)
-
-            self._show_story(story)
-            self.story_url.set("")
-            self.status.set("Đã xử lý thành công")
-        except StoryReplacementRequired:
-            # Defensive fallback; normal GUI path confirms before this point.
-            pass
-        except Exception as exc:
-            messagebox.showerror("Duyệt sách thất bại", str(exc))
-        self._sync_controls()
-
-    def previous(self):
-        self._navigate(-1)
-
-    def next(self):
-        self._navigate(1)
-
-    def _navigate(self, delta: int):
-        if self._story is None or self._flow is None:
+        if not url:
+            self._notify("Chưa nhập link truyện.")
             return
-        numbers = [c.number for c in self._story.chapters]
-        current = self._story.target_chapter_number
-        if current is None or current not in numbers:
+
+        self.register_btn.configure(state="disabled")
+        self._notify("Đang scrape và đăng ký truyện...")
+
+        def worker():
+            try:
+                story = self._flow.register_story(self.registration, url)
+            except Exception as exc:
+                self.root.after(0, lambda exc=exc: self._registration_error(exc))
+                return
+            self.root.after(0, lambda: self._registration_done(story))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _registration_error(self, message):
+        if isinstance(message, BookshelfWriteError):
+            self._notify(str(message))
+        else:
+            self._notify(f"Scrape/đăng ký thất bại: {message}")
+        self.register_btn.configure(state="normal")
+
+    def _registration_done(self, story):
+        self.story = story
+        self._render_story()
+        self.register_btn.configure(state="normal")
+        self._sync()
+
+    def _render_story(self):
+        if self.story is None:
+            return
+        current = self.story.target_chapter_number
+        self.info.set(
+            f"{self.story.title or self.story.story_id}\n"
+            f"Tác giả: {self.story.author or '—'}\n"
+            f"Nguồn: {self.story.source_url}"
+        )
+        self.chapter_info.set(
+            f"Chương hiện tại: {current or '—'} · "
+            f"Tổng đã biết: {len(self.story.chapters)}"
+        )
+        self.jump["values"] = [
+            f"{c.number}: {c.title}" for c in self.story.chapters
+        ]
+        if current is not None:
+            for value in self.jump["values"]:
+                if value.startswith(f"{current}:"):
+                    self.jump.set(value)
+                    break
+
+    def _move(self, delta: int):
+        if self.story is None:
+            return
+        numbers = [c.number for c in self.story.chapters]
+        current = self.story.target_chapter_number
+        if current not in numbers:
             return
         index = numbers.index(current) + delta
-        if 0 <= index < len(numbers):
-            self._story = self._flow.set_target(self.folder.get(), numbers[index])
-            self._show_story(self._story)
-
-    def jump(self):
-        if self._story is None:
+        if not 0 <= index < len(numbers):
             return
-        number = simpledialog.askinteger("Nhảy chương", "Số chương:", parent=self.root)
-        if number is None:
+        target = numbers[index]
+        self.story = self._flow.set_target(self.story.story_id, target)
+        self._render_story()
+        self._notify(f"Đã chuyển mục tiêu sang chương {target}.")
+        self._fetch_current()
+
+    def _jump(self, _event=None):
+        if self.story is None:
+            return
+        value = self.jump.get().split(":", 1)[0]
+        if not value.isdigit():
+            return
+        target = int(value)
+        self.story = self._flow.set_target(self.story.story_id, target)
+        self._render_story()
+        self._notify(f"Đã chuyển mục tiêu sang chương {target}.")
+        self._fetch_current()
+
+    def _fetch_current(self):
+        if self.registration is None or self.story is None:
             return
         try:
-            self._story = self._flow.set_target(self.folder.get(), number)
-            self._show_story(self._story)
+            self.story = self._flow.trigger_current(
+                self.registration,
+                self.story.story_id,
+            )
+            self._render_story()
         except Exception as exc:
-            messagebox.showerror("Không thể nhảy chương", str(exc))
+            self._notify(f"Tải chapter thất bại: {exc}")
 
-    def get_chapter(self):
-        if self._story is None or self._flow is None:
-            return
-        try:
-            self._story = self._flow.trigger_current(self.folder.get())
-            self._show_story(self._story)
-            self.status.set("Đã tải chương hiện tại")
-        except Exception as exc:
-            messagebox.showerror("Tải chương thất bại", str(exc))
-
-    def _load_existing(self, registration):
-        if not registration.story_id:
-            self._story = None
-            self.story_title.set("")
-            self.reading.set("")
-            return
-        try:
-            self._story = self._flow.load_current(self.user_id, registration.story_id)
-            self._show_story(self._story)
-        except FileNotFoundError:
-            self._story = None
-            self.story_title.set("")
-            self.reading.set("")
-
-    def _show_story(self, story):
-        self.story_title.set(story.title or story.story_id)
-        self.reading.set(f"Đang đọc: Chương {story.target_chapter_number or '—'}")
-
-    def _flow_for(self, folder):
-        meta = Path(folder).expanduser().resolve() / ".tangthu"
-        app = build_application(
-            meta / "state",
-            meta / "manifest",
-            resolution_root=Path.home() / ".tangthu" / "resolution",
+    def _help(self):
+        self._notify(
+            "Dán link tủ sách trước. Sau khi nhận ra tủ, nhập link truyện và bấm Đăng ký."
         )
-        self._flow = BookshelfStoryFlow(app)
-        return self._flow
 
-    def _sync_controls(self):
-        registered = bool(self.folder.get().strip() and self._flow is not None)
-        state = "normal" if registered else "disabled"
-        self.url_entry.configure(state=state)
-        self.browse_button.configure(state=state)
-        story_ready = registered and self._story is not None
-        nav_state = "normal" if story_ready else "disabled"
-        self.prev_button.configure(state=nav_state)
-        self.next_button.configure(state=nav_state)
-        self.jump_button.configure(state=nav_state)
-        self.get_button.configure(state=nav_state)
+    def _sync(self):
+        enabled = self.registration is not None
+        self.story_entry.configure(state="normal" if enabled else "disabled")
+        self.register_btn.configure(state="normal" if enabled else "disabled")
+        story_ready = self.story is not None
+        self.prev_btn.configure(state="normal" if story_ready else "disabled")
+        self.next_btn.configure(state="normal" if story_ready else "disabled")
+        self.jump.configure(state="readonly" if story_ready else "disabled")
 
 
 def main():
-    root = tk.Tk()
-    StoryBookshelfGUI(root)
-    root.mainloop()
+    raise SystemExit(
+        "GUI requires an injected BookshelfBackend; use StoryBookshelfGUI(...) from an integration entry point."
+    )
 
 
 if __name__ == "__main__":

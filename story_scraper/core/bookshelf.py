@@ -1,65 +1,53 @@
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
-from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 
 @dataclass(frozen=True)
 class BookshelfRegistration:
-    path: str
+    """Registered Tàng Thư receiving shelf.
+
+    This object contains only registration metadata. It never persists state
+    inside the user's Google Drive folder.
+    """
+
+    folder_id: str
     name: str
-    story_id: str | None = None
+    folder_url: str = ""
+    can_edit: bool | None = None
 
 
-class BookshelfRegistrationStore:
-    """Persist the user's registered receiving folder and current story."""
+class BookshelfBackend:
+    """Interface to the existing Tàng Thư bookshelf-registration service."""
 
-    filename = ".tangthu-bookshelf.json"
+    def inspect(self, folder_url: str) -> BookshelfRegistration | None:
+        raise NotImplementedError
 
-    def load(self, folder: str | Path) -> BookshelfRegistration | None:
-        root = Path(folder).expanduser().resolve()
-        path = root / self.filename
-        if not path.exists():
-            return None
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return BookshelfRegistration(
-            path=str(root),
-            name=data.get("name") or root.name,
-            story_id=data.get("story_id"),
-        )
+    def write(self, registration: BookshelfRegistration, filename: str, payload: bytes) -> None:
+        raise NotImplementedError
 
-    def register(self, folder: str | Path) -> BookshelfRegistration:
-        root = Path(folder).expanduser().resolve()
-        root.mkdir(parents=True, exist_ok=True)
-        existing = self.load(root)
-        registration = BookshelfRegistration(
-            path=str(root),
-            name=(existing.name if existing else root.name),
-            story_id=(existing.story_id if existing else None),
-        )
-        self._write(root, registration)
-        return registration
+    def delete_story_files(self, registration: BookshelfRegistration) -> None:
+        raise NotImplementedError
 
-    def set_story(self, folder: str | Path, story_id: str | None) -> BookshelfRegistration:
-        root = Path(folder).expanduser().resolve()
-        current = self.register(root)
-        updated = BookshelfRegistration(current.path, current.name, story_id)
-        self._write(root, updated)
-        return updated
 
-    def clear_story(self, folder: str | Path) -> BookshelfRegistration:
-        return self.set_story(folder, None)
+def parse_drive_folder_id(value: str) -> str:
+    raw = value.strip()
+    if not raw:
+        return ""
 
-    def _write(self, root: Path, registration: BookshelfRegistration) -> None:
-        path = root / self.filename
-        tmp = path.with_suffix(".tmp")
-        tmp.write_text(
-            json.dumps(
-                {"name": registration.name, "story_id": registration.story_id},
-                ensure_ascii=False,
-                indent=2,
-            ),
-            encoding="utf-8",
-        )
-        tmp.replace(path)
+    try:
+        parsed = urlparse(raw)
+        match = parsed.path.rstrip("/").split("/folders/")
+        if len(match) == 2 and match[1]:
+            return match[1].split("/")[0]
+
+        query_id = parse_qs(parsed.query).get("id", [""])[0]
+        if query_id:
+            return query_id
+    except ValueError:
+        pass
+
+    if raw.replace("-", "").replace("_", "").isalnum() and len(raw) >= 10:
+        return raw
+    return ""

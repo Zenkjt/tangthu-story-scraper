@@ -11,7 +11,8 @@ from .state import StoryStateStore
 class StoryEngine:
     """One trigger fetches exactly one chapter; index discovery never fetches content."""
 
-    def __init__(self, state: StoryStateStore, epub: EpubSink, adapter: SiteAdapter, catalog=None):
+    def __init__(self, state: StoryStateStore, epub: EpubSink,
+                 adapter: SiteAdapter, catalog=None):
         self.state = state
         self.epub = epub
         self.adapter = adapter
@@ -30,11 +31,17 @@ class StoryEngine:
     def next_target(self, story: Story):
         if story.target_chapter_number is None:
             return None
-        return next((c for c in story.chapters if c.number == story.target_chapter_number), None)
+        return next(
+            (c for c in story.chapters
+             if c.number == story.target_chapter_number),
+            None,
+        )
 
     def jump_to_chapter(self, story: Story, number: int) -> Story:
-        """Change target without downloading anything."""
-        target = next((c for c in story.chapters if c.number == int(number)), None)
+        target = next(
+            (c for c in story.chapters if c.number == int(number)),
+            None,
+        )
         if target is None:
             raise ValueError(f"Unknown chapter: {number}")
         story.target_chapter_number = target.number
@@ -50,9 +57,9 @@ class StoryEngine:
             if chapter is None:
                 return story
 
-        # Exactly one content fetch per trigger.
-        fetched, complete = self.adapter.fetch_chapter(chapter)
-        content = fetched if isinstance(fetched, ChapterContent) else fetched
+        fetched = self.adapter.fetch_chapter(chapter)
+        content, complete = fetched
+
         if isinstance(content, ChapterContent):
             new_hash = content.fingerprint()
         else:
@@ -64,23 +71,33 @@ class StoryEngine:
             self.epub.replace(story, chapter, content)
 
         chapter.content_hash = new_hash
-        chapter.status = ChapterStatus.COMPLETE if complete else ChapterStatus.OPEN
+        chapter.status = (
+            ChapterStatus.COMPLETE if complete else ChapterStatus.OPEN
+        )
 
         if complete:
-            story.target_chapter_number = self._next_known_number(story, chapter.number)
+            story.target_chapter_number = self._next_known_number(
+                story, chapter.number
+            )
         else:
             story.target_chapter_number = chapter.number
 
-        # Re-index only after consuming the last known chapter. Newly discovered
-        # chapters are targets for a future trigger, never fetched in this one.
+        # TOC is checked/rebuilt only when the processed chapter was the
+        # last chapter known before this trigger.
         if chapter.number == self._last_known_number(story):
+            before = self._chapter_index_signature(story)
             self._refresh_tail(story)
+            after = self._chapter_index_signature(story)
+
+            if self.catalog is not None and before != after:
+                self.catalog.update(story)
+
             if complete:
-                story.target_chapter_number = self._next_known_number(story, chapter.number)
+                story.target_chapter_number = self._next_known_number(
+                    story, chapter.number
+                )
 
         self.state.save(story)
-        if self.catalog is not None:
-            self.catalog.update(story)
         return story
 
     def trigger_previous(self, story: Story) -> Story:
@@ -91,7 +108,10 @@ class StoryEngine:
         if story.target_chapter_number is None:
             story.target_chapter_number = story.chapters[-1].number
         else:
-            previous = [c.number for c in story.chapters if c.number < story.target_chapter_number]
+            previous = [
+                c.number for c in story.chapters
+                if c.number < story.target_chapter_number
+            ]
             if previous:
                 story.target_chapter_number = previous[-1]
 
@@ -106,6 +126,13 @@ class StoryEngine:
     @staticmethod
     def _last_known_number(story: Story) -> int | None:
         return max((c.number for c in story.chapters), default=None)
+
+    @staticmethod
+    def _chapter_index_signature(story: Story) -> tuple[tuple[int, str, str], ...]:
+        return tuple(
+            (c.number, c.title, c.url)
+            for c in sorted(story.chapters, key=lambda c: c.number)
+        )
 
     def _refresh_tail(self, story: Story) -> None:
         updates = self.adapter.refresh_tail(story)

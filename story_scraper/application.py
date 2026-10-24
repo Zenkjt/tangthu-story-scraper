@@ -34,6 +34,7 @@ class StoryApplication:
         epub: EpubSink,
         *,
         start_chapter_number: int | None = None,
+        catalog: StoryCatalogEpubSink | None = None,
     ) -> Story:
         source: ResolvedStorySource = self.registry.resolve_source(url)
         story = source.story
@@ -46,14 +47,27 @@ class StoryApplication:
                 story.target_chapter_number = target.number
         self.manifest.save(user_id, story)
         return StoryEngine(
-            self.state, epub, source.adapter, catalog=self.catalog
+            self.state,
+            epub,
+            source.adapter,
+            catalog=catalog or self.catalog,
         ).initialize(story)
 
-    def trigger_next(self, user_id: str, story_id: str, epub: EpubSink) -> Story:
+    def trigger_next(
+        self,
+        user_id: str,
+        story_id: str,
+        epub: EpubSink,
+        *,
+        catalog: StoryCatalogEpubSink | None = None,
+    ) -> Story:
         story = self._load_story(user_id, story_id)
         adapter = self.registry.resolve_instance(story.source_url)
         story = StoryEngine(
-            self.state, epub, adapter, catalog=self.catalog
+            self.state,
+            epub,
+            adapter,
+            catalog=catalog or self.catalog,
         ).trigger_next(story)
         self.manifest.save(user_id, story)
         return story
