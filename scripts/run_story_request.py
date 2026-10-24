@@ -6,12 +6,13 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urlparse, urljoin
 from urllib.request import Request, urlopen
 
 from story_scraper.application import build_application
 from story_scraper.core.models import Story
 from story_scraper.core.resolution import AdapterResolutionStore
+from story_scraper.story_catalog import StoryCatalogEpubSink
 from story_scraper.story_epub import StoryEpubSink
 
 
@@ -41,6 +42,14 @@ def gh_get(path: str) -> dict:
 
 
 def github_put(path: str, payload: dict, message: str) -> None:
+    github_put_bytes(
+        path,
+        (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8"),
+        message,
+    )
+
+
+def github_put_bytes(path: str, content: bytes, message: str) -> None:
     api = f"https://api.github.com/repos/Zenkjt/tangthu-story-scraper/contents/{path}"
     sha = None
     try:
@@ -52,9 +61,7 @@ def github_put(path: str, payload: dict, message: str) -> None:
 
     body = {
         "message": message,
-        "content": base64.b64encode(
-            (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-        ).decode("ascii"),
+        "content": base64.b64encode(content).decode("ascii"),
         "branch": "main",
     }
     if sha:
@@ -66,7 +73,7 @@ def github_put(path: str, payload: dict, message: str) -> None:
         method="PUT",
         headers={**gh_headers(), "Content-Type": "application/json"},
     )
-    with urlopen(req, timeout=30):
+    with urlopen(req, timeout=60):
         pass
 
 
@@ -134,6 +141,20 @@ def cache_story(user_id: str, story: Story) -> None:
     )
 
 
+def cache_cover(user_id: str, story_id: str, cover_path: Path) -> None:
+    suffix = cover_path.suffix.lower()
+    if suffix == ".jpeg":
+        suffix = ".jpg"
+    if suffix not in {".jpg", ".png", ".webp"}:
+        suffix = ".jpg"
+
+    github_put_bytes(
+        f"story-cache/{safe(user_id)}/{safe(story_id)}/cover{suffix}",
+        cover_path.read_bytes(),
+        f"story: cache cover {user_id}/{story_id}",
+    )
+
+
 def hydrate_cached_story(user_id: str, story_id: str) -> Story:
     meta = gh_get(
         f"contents/story-cache/{safe(user_id)}/{safe(story_id)}/story.json?ref=main"
@@ -163,21 +184,38 @@ def fetch_text(url: str) -> str:
 def ensure_cover_url(story: Story) -> None:
     if getattr(story, "cover_url", None):
         return
+
     html = fetch_text(story.source_url)
     patterns = [
-        r"<meta[^>]+(?:property|name)=[\"'](?:og:image|twitter:image)[\"'][^>]+content=[\"']([^\"']+)"
-        r"<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+(?:property|name)=[\"'](?:og:image|twitter:image)[\"']"
+        r"<meta[^>]+(?:property|name)=[\"'](?:og:image|twitter:image)[\"'][^>]+content=[\"']([^\"']+)",
+        r"<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+(?:property|name)=[\"'](?:og:image|twitter:image)[\"']",
     ]
     for pattern in patterns:
         match = re.search(pattern, html, re.I)
         if match:
             story.cover_url = urljoin(story.source_url, match.group(1))
             return
+
     raise RuntimeError("Không tìm thấy ảnh bìa gốc (og:image).")
 
 
-def download_cover(story: Story, target: Path) -> None:
+def cover_suffix(url: str, content_type: str | None) -> str:
+    mime = (content_type or "").split(";", 1)[0].lower()
+    by_mime = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/webp": ".webp",
+    }
+    if mime in by_mime:
+        return by_mime[mime]
+
+    suffix = Path(urlparse(url).path).suffix.lower()
+    return suffix if suffix in {".jpg", ".jpeg", ".png", ".webp"} else ".jpg"
+
+
+def download_cover(story: Story, target_dir: Path) -> Path:
     ensure_cover_url(story)
+
     req = Request(
         story.cover_url,
         headers={
@@ -186,7 +224,13 @@ def download_cover(story: Story, target: Path) -> None:
         },
     )
     with urlopen(req, timeout=30) as response:
+        suffix = cover_suffix(story.cover_url, response.headers.get("Content-Type"))
+        if suffix == ".jpeg":
+            suffix = ".jpg"
+        target = target_dir / f"cover{suffix}"
         target.write_bytes(response.read())
+
+    return target
 
 
 def drive_files(folder_id: str) -> list[dict]:
@@ -208,6 +252,7 @@ def download_drive_file(folder_id: str, filename: str, target: Path) -> bool:
         return False
     if len(files) > 1:
         raise RuntimeError(f"Drive có nhiều file {filename}; từ chối chọn mơ hồ.")
+
     file_id = files[0]["id"]
     key = os.environ["TANGTHU_GOOGLE_API_KEY"]
     url = (
@@ -217,6 +262,7 @@ def download_drive_file(folder_id: str, filename: str, target: Path) -> bool:
     req = Request(url, headers={"User-Agent": "TangThu-Story-Action/1.0"})
     with urlopen(req, timeout=120) as response:
         target.write_bytes(response.read())
+
     return True
 
 
@@ -230,6 +276,7 @@ def upload_drive(folder_id: str, filename: str, payload: bytes) -> None:
         "mime_type": "application/epub+zip",
         "content_base64": base64.b64encode(payload).decode("ascii"),
     }
+
     req = Request(
         url,
         data=json.dumps(body).encode("utf-8"),
@@ -238,6 +285,7 @@ def upload_drive(folder_id: str, filename: str, payload: bytes) -> None:
     )
     with urlopen(req, timeout=180) as response:
         result = json.loads(response.read().decode("utf-8"))
+
     if not result.get("ok"):
         raise RuntimeError(result.get("error", "Drive upload thất bại"))
 
@@ -245,6 +293,7 @@ def upload_drive(folder_id: str, filename: str, payload: bytes) -> None:
 def update_source_coverage() -> None:
     store = AdapterResolutionStore(RESOLUTION_ROOT)
     current = {}
+
     try:
         meta = gh_get("contents/story-cache/story-sources.json?ref=main")
         current = json.loads(
@@ -266,7 +315,11 @@ def update_source_coverage() -> None:
             "adapter": item.adapter,
             "reason": item.reason,
             "timestamp": item.timestamp,
-            "message": "Bình thường" if item.status == "good" else (item.reason or "Không truy cập được"),
+            "message": (
+                "Bình thường"
+                if item.status == "good"
+                else (item.reason or "Không truy cập được")
+            ),
         }
 
     payload = {
@@ -274,6 +327,7 @@ def update_source_coverage() -> None:
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "sources": sorted(merged.values(), key=lambda x: x["domain"]),
     }
+
     github_put(
         "story-cache/story-sources.json",
         payload,
@@ -295,6 +349,17 @@ class LocalEpubSink:
         self.sink.replace(story, chapter, content)
 
 
+class _NullSink:
+    def create(self, story):
+        return None
+
+    def append(self, story, chapter, content):
+        return None
+
+    def replace(self, story, chapter, content):
+        return None
+
+
 def main() -> int:
     request = read_request(os.environ["STORY_REQUEST_ID"])
     action = request["action"]
@@ -313,10 +378,41 @@ def main() -> int:
         )
 
         if action == "register":
-            story = app.initialize(user_id, request["url"], _NullSink())
+            # Registration discovers metadata/index only. It does not fetch a chapter.
+            story = app.registry.resolve_source(request["url"]).story
             ensure_cover_url(story)
+
+            out = WORK / safe(user_id) / safe(story.story_id)
+            out.mkdir(parents=True, exist_ok=True)
+
+            cover_path = download_cover(story, out)
+
+            # initialize() creates runtime state and the navigation EPUB when
+            # a catalog sink is supplied. The content EPUB is NOT created here.
+            catalog_path = out / "0neStoryTOC.epub"
+            catalog = StoryCatalogEpubSink(catalog_path, cover_path)
+
+            story = app.initialize(
+                user_id,
+                request["url"],
+                _NullSink(),
+                catalog=catalog,
+            )
+
             cache_story(user_id, story)
-            update_operation(request, "completed", "Đăng ký truyện thành công.", story)
+            cache_cover(user_id, story.story_id, cover_path)
+            upload_drive(
+                folder_id,
+                "0neStoryTOC.epub",
+                catalog_path.read_bytes(),
+            )
+
+            update_operation(
+                request,
+                "completed",
+                "Đăng ký truyện thành công.",
+                story,
+            )
             update_source_coverage()
             return 0
 
@@ -324,41 +420,79 @@ def main() -> int:
             raise RuntimeError("Thiếu story_id")
 
         story = hydrate_cached_story(user_id, story_id)
-        # StoryApplication loads runtime state/manifest from its stores on every trigger.
-        # Rehydrate both from the persistent GitHub story cache for this ephemeral Action run.
         app.state.save(story)
         app.manifest.save(user_id, story)
 
         if action == "previous":
             story = app.trigger_previous(user_id, story_id, _NullSink())
             cache_story(user_id, story)
-            update_operation(request, "completed", "Đã chuyển về chương trước.", story)
+            update_operation(
+                request,
+                "completed",
+                "Đã chuyển về chương trước.",
+                story,
+            )
             return 0
 
         if action == "jump":
-            story = app.set_target(user_id, story_id, int(request["chapter_number"]))
+            story = app.set_target(
+                user_id,
+                story_id,
+                int(request["chapter_number"]),
+            )
             cache_story(user_id, story)
-            update_operation(request, "completed", "Đã chọn chương.", story)
+            update_operation(
+                request,
+                "completed",
+                "Đã chọn chương.",
+                story,
+            )
             return 0
 
         if action == "next":
             out = WORK / safe(user_id) / safe(story_id)
             out.mkdir(parents=True, exist_ok=True)
             epub_path = out / "0neStory.epub"
-            cover_path = out / "cover.jpg"
 
-            if not download_drive_file(folder_id, "0neStory.epub", epub_path):
-                # First chapter request can create the continuous EPUB from scratch.
-                download_cover(story, cover_path)
+            cover_candidates = sorted(
+                p
+                for p in out.glob("cover.*")
+                if p.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}
+            )
+
+            if cover_candidates:
+                cover_path = cover_candidates[0]
+            else:
+                cover_path = download_cover(story, out)
+                cache_cover(user_id, story_id, cover_path)
+
+            if not download_drive_file(
+                folder_id,
+                "0neStory.epub",
+                epub_path,
+            ):
                 epub_path.unlink(missing_ok=True)
-            elif not cover_path.exists():
-                download_cover(story, cover_path)
 
             story_sink = LocalEpubSink(epub_path, cover_path)
-            story = app.trigger_next(user_id, story_id, story_sink)
+            story = app.trigger_next(
+                user_id,
+                story_id,
+                story_sink,
+            )
+
             cache_story(user_id, story)
-            upload_drive(folder_id, "0neStory.epub", epub_path.read_bytes())
-            update_operation(request, "completed", "Đã tải/cập nhật chương.", story)
+            upload_drive(
+                folder_id,
+                "0neStory.epub",
+                epub_path.read_bytes(),
+            )
+
+            update_operation(
+                request,
+                "completed",
+                "Đã tải/cập nhật chương.",
+                story,
+            )
             update_source_coverage()
             return 0
 
@@ -370,17 +504,6 @@ def main() -> int:
         finally:
             update_source_coverage()
         raise
-
-
-class _NullSink:
-    def create(self, story):
-        return None
-
-    def append(self, story, chapter, content):
-        return None
-
-    def replace(self, story, chapter, content):
-        return None
 
 
 if __name__ == "__main__":
