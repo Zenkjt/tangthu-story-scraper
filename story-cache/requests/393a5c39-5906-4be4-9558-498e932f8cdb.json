@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://truyenfull.live/than-dao-dan-ton-6060282",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "failed",
+  "message": "[Errno 2] No such file or directory: '/home/runner/work/tangthu-story-scraper/tangthu-story-scraper/.story-work/state/truyenfull.live/than-dao-dan-ton-6060282.json.tmp'",
   "created_at": "2026-10-24T14:21:27.961Z",
-  "updated_at": "2026-10-24T14:21:44.865405+00:00"
+  "updated_at": "2026-10-24T14:25:15.872745+00:00"
 }
