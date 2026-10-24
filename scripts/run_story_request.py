@@ -6,7 +6,7 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import quote, urlparse, urljoin
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from story_scraper.application import build_application
@@ -14,7 +14,6 @@ from story_scraper.core.models import Story
 from story_scraper.core.resolution import AdapterResolutionStore
 from story_scraper.story_catalog import StoryCatalogEpubSink
 from story_scraper.story_epub import StoryEpubSink
-
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / ".story-work"
@@ -79,7 +78,9 @@ def github_put_bytes(path: str, content: bytes, message: str) -> None:
 
 def read_request(request_id: str) -> dict:
     meta = gh_get(f"contents/story-cache/requests/{request_id}.json?ref=main")
-    return json.loads(base64.b64decode(meta["content"].replace("\n", "")).decode("utf-8"))
+    return json.loads(
+        base64.b64decode(meta["content"].replace("\n", "")).decode("utf-8")
+    )
 
 
 def safe(value: str) -> str:
@@ -90,7 +91,7 @@ def story_view(story: Story) -> dict:
     chapters = sorted(story.chapters, key=lambda c: c.number)
     current = story.target_chapter_number
     current_chapter = next((c for c in chapters if c.number == current), None)
-    result = {
+    return {
         "story_id": story.story_id,
         "title": story.title,
         "author": story.author,
@@ -110,12 +111,14 @@ def story_view(story: Story) -> dict:
         ],
         "status": "ready",
     }
-    if getattr(story, "cover_url", None):
-        result["cover_url"] = story.cover_url
-    return result
 
 
-def update_operation(request: dict, status: str, message: str, story: Story | None = None) -> None:
+def update_operation(
+    request: dict,
+    status: str,
+    message: str,
+    story: Story | None = None,
+) -> None:
     request["status"] = status
     request["message"] = message
     request["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -132,26 +135,8 @@ def update_operation(request: dict, status: str, message: str, story: Story | No
 def cache_story(user_id: str, story: Story) -> None:
     github_put(
         f"story-cache/{safe(user_id)}/{safe(story.story_id)}/story.json",
-        {
-            "schema_version": 1,
-            **story.as_dict(),
-            "cover_url": getattr(story, "cover_url", None),
-        },
+        {"schema_version": 1, **story.as_dict()},
         f"story: update cache {user_id}/{story.story_id}",
-    )
-
-
-def cache_cover(user_id: str, story_id: str, cover_path: Path) -> None:
-    suffix = cover_path.suffix.lower()
-    if suffix == ".jpeg":
-        suffix = ".jpg"
-    if suffix not in {".jpg", ".png", ".webp"}:
-        suffix = ".jpg"
-
-    github_put_bytes(
-        f"story-cache/{safe(user_id)}/{safe(story_id)}/cover{suffix}",
-        cover_path.read_bytes(),
-        f"story: cache cover {user_id}/{story_id}",
     )
 
 
@@ -159,78 +144,10 @@ def hydrate_cached_story(user_id: str, story_id: str) -> Story:
     meta = gh_get(
         f"contents/story-cache/{safe(user_id)}/{safe(story_id)}/story.json?ref=main"
     )
-    data = json.loads(base64.b64decode(meta["content"].replace("\n", "")).decode("utf-8"))
-    story = Story.from_dict(data)
-    if data.get("cover_url"):
-        story.cover_url = data["cover_url"]
-    return story
-
-
-def fetch_text(url: str) -> str:
-    req = Request(
-        url,
-        headers={
-            "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)",
-            "Accept": "text/html,application/xhtml+xml",
-        },
+    data = json.loads(
+        base64.b64decode(meta["content"].replace("\n", "")).decode("utf-8")
     )
-    with urlopen(req, timeout=20) as response:
-        return response.read().decode(
-            response.headers.get_content_charset() or "utf-8",
-            errors="replace",
-        )
-
-
-def ensure_cover_url(story: Story) -> None:
-    if getattr(story, "cover_url", None):
-        return
-
-    html = fetch_text(story.source_url)
-    patterns = [
-        r"<meta[^>]+(?:property|name)=[\"'](?:og:image|twitter:image)[\"'][^>]+content=[\"']([^\"']+)",
-        r"<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+(?:property|name)=[\"'](?:og:image|twitter:image)[\"']",
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, html, re.I)
-        if match:
-            story.cover_url = urljoin(story.source_url, match.group(1))
-            return
-
-    raise RuntimeError("Không tìm thấy ảnh bìa gốc (og:image).")
-
-
-def cover_suffix(url: str, content_type: str | None) -> str:
-    mime = (content_type or "").split(";", 1)[0].lower()
-    by_mime = {
-        "image/jpeg": ".jpg",
-        "image/png": ".png",
-        "image/webp": ".webp",
-    }
-    if mime in by_mime:
-        return by_mime[mime]
-
-    suffix = Path(urlparse(url).path).suffix.lower()
-    return suffix if suffix in {".jpg", ".jpeg", ".png", ".webp"} else ".jpg"
-
-
-def download_cover(story: Story, target_dir: Path) -> Path:
-    ensure_cover_url(story)
-
-    req = Request(
-        story.cover_url,
-        headers={
-            "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)",
-            "Referer": story.source_url,
-        },
-    )
-    with urlopen(req, timeout=30) as response:
-        suffix = cover_suffix(story.cover_url, response.headers.get("Content-Type"))
-        if suffix == ".jpeg":
-            suffix = ".jpg"
-        target = target_dir / f"cover{suffix}"
-        target.write_bytes(response.read())
-
-    return target
+    return Story.from_dict(data)
 
 
 def drive_files(folder_id: str) -> list[dict]:
@@ -262,7 +179,6 @@ def download_drive_file(folder_id: str, filename: str, target: Path) -> bool:
     req = Request(url, headers={"User-Agent": "TangThu-Story-Action/1.0"})
     with urlopen(req, timeout=120) as response:
         target.write_bytes(response.read())
-
     return True
 
 
@@ -276,7 +192,6 @@ def upload_drive(folder_id: str, filename: str, payload: bytes) -> None:
         "mime_type": "application/epub+zip",
         "content_base64": base64.b64encode(payload).decode("ascii"),
     }
-
     req = Request(
         url,
         data=json.dumps(body).encode("utf-8"),
@@ -285,7 +200,6 @@ def upload_drive(folder_id: str, filename: str, payload: bytes) -> None:
     )
     with urlopen(req, timeout=180) as response:
         result = json.loads(response.read().decode("utf-8"))
-
     if not result.get("ok"):
         raise RuntimeError(result.get("error", "Drive upload thất bại"))
 
@@ -293,21 +207,19 @@ def upload_drive(folder_id: str, filename: str, payload: bytes) -> None:
 def update_source_coverage() -> None:
     store = AdapterResolutionStore(RESOLUTION_ROOT)
     current = {}
-
     try:
         meta = gh_get("contents/story-cache/story-sources.json?ref=main")
         current = json.loads(
             base64.b64decode(meta["content"].replace("\n", "")).decode("utf-8")
         )
     except Exception:
-        current = {}
+        pass
 
     merged = {
         str(item.get("domain")): item
         for item in current.get("sources", [])
         if item.get("domain")
     }
-
     for item in store.active_coverage():
         merged[item.domain] = {
             "domain": item.domain,
@@ -322,22 +234,20 @@ def update_source_coverage() -> None:
             ),
         }
 
-    payload = {
-        "schema_version": 1,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-        "sources": sorted(merged.values(), key=lambda x: x["domain"]),
-    }
-
     github_put(
         "story-cache/story-sources.json",
-        payload,
+        {
+            "schema_version": 1,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "sources": sorted(merged.values(), key=lambda x: x["domain"]),
+        },
         "story: update source coverage",
     )
 
 
 class LocalEpubSink:
-    def __init__(self, path: Path, cover_path: Path):
-        self.sink = StoryEpubSink(path, cover_path)
+    def __init__(self, path: Path):
+        self.sink = StoryEpubSink(path)
 
     def create(self, story):
         self.sink.create(story)
@@ -378,19 +288,13 @@ def main() -> int:
         )
 
         if action == "register":
-            # Registration discovers metadata/index only. It does not fetch a chapter.
             story = app.registry.resolve_source(request["url"]).story
-            ensure_cover_url(story)
 
             out = WORK / safe(user_id) / safe(story.story_id)
             out.mkdir(parents=True, exist_ok=True)
 
-            cover_path = download_cover(story, out)
-
-            # initialize() creates runtime state and the navigation EPUB when
-            # a catalog sink is supplied. The content EPUB is NOT created here.
             catalog_path = out / "0neStoryTOC.epub"
-            catalog = StoryCatalogEpubSink(catalog_path, cover_path)
+            catalog = StoryCatalogEpubSink(catalog_path)
 
             story = app.initialize(
                 user_id,
@@ -400,7 +304,6 @@ def main() -> int:
             )
 
             cache_story(user_id, story)
-            cache_cover(user_id, story.story_id, cover_path)
             upload_drive(
                 folder_id,
                 "0neStoryTOC.epub",
@@ -454,26 +357,10 @@ def main() -> int:
             out.mkdir(parents=True, exist_ok=True)
             epub_path = out / "0neStory.epub"
 
-            cover_candidates = sorted(
-                p
-                for p in out.glob("cover.*")
-                if p.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}
-            )
-
-            if cover_candidates:
-                cover_path = cover_candidates[0]
-            else:
-                cover_path = download_cover(story, out)
-                cache_cover(user_id, story_id, cover_path)
-
-            if not download_drive_file(
-                folder_id,
-                "0neStory.epub",
-                epub_path,
-            ):
+            if not download_drive_file(folder_id, "0neStory.epub", epub_path):
                 epub_path.unlink(missing_ok=True)
 
-            story_sink = LocalEpubSink(epub_path, cover_path)
+            story_sink = LocalEpubSink(epub_path)
             story = app.trigger_next(
                 user_id,
                 story_id,
@@ -499,10 +386,8 @@ def main() -> int:
         raise RuntimeError(f"Unsupported action: {action}")
 
     except Exception as exc:
-        try:
-            update_operation(request, "failed", str(exc))
-        finally:
-            update_source_coverage()
+        update_operation(request, "failed", str(exc))
+        update_source_coverage()
         raise
 
 

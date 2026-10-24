@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 import json
+import re
 from pathlib import Path
+
 from .models import Story
 
 
@@ -11,8 +14,13 @@ class StoryStateStore:
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
 
+    @staticmethod
+    def _safe_filename(story_id: str) -> str:
+        value = re.sub(r"[^A-Za-z0-9._-]+", "_", str(story_id or "unknown"))
+        return value.strip("._") or "unknown"
+
     def path_for(self, story_id: str) -> Path:
-        return self.root / f"{story_id}.json"
+        return self.root / f"{self._safe_filename(story_id)}.json"
 
     def load(self, story_id: str) -> Story | None:
         path = self.path_for(story_id)
@@ -22,6 +30,7 @@ class StoryStateStore:
 
     def save(self, story: Story) -> None:
         path = self.path_for(story.story_id)
+        path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".json.tmp")
         tmp.write_text(
             json.dumps(story.as_dict(), ensure_ascii=False, indent=2),
