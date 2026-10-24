@@ -87,7 +87,66 @@ def safe(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]", "_", str(value or "")) or "unknown"
 
 
-def story_view(story: Story) -> dict:
+def fetch_cover(source_url: str) -> tuple[bytes, str] | None:
+    """Best-effort GUI cover discovery. Cover is cache/UI metadata, never EPUB content."""
+    try:
+        request = Request(
+            source_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)",
+                "Accept": "text/html,application/xhtml+xml",
+                "Accept-Encoding": "identity",
+            },
+        )
+        with urlopen(request, timeout=30) as response:
+            html = response.read().decode(
+                response.headers.get_content_charset() or "utf-8",
+                errors="replace",
+            )
+        match = re.search(
+            r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\'][^>]+content=["\']([^"\']+)["\']',
+            html,
+            flags=re.I,
+        )
+        if not match:
+            match = re.search(
+                r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\']',
+                html,
+                flags=re.I,
+            )
+        if not match:
+            return None
+        cover_url = match.group(1).strip()
+        cover_request = Request(
+            cover_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)",
+                "Referer": source_url,
+                "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+            },
+        )
+        with urlopen(cover_request, timeout=60) as response:
+            payload = response.read()
+            media_type = response.headers.get_content_type() or "image/jpeg"
+        ext = {
+            "image/png": ".png",
+            "image/webp": ".webp",
+            "image/gif": ".gif",
+            "image/jpeg": ".jpg",
+        }.get(media_type, ".jpg")
+        return payload, ext
+    except Exception:
+        return None
+
+
+def cover_cache_url(user_id: str, story_id: str, ext: str = ".jpg") -> str:
+    return (
+        "https://raw.githubusercontent.com/Zenkjt/tangthu-story-scraper/"
+        f"main/story-cache/{safe(user_id)}/{safe(story_id)}/cover{ext}"
+    )
+
+
+def story_view(story: Story, user_id: str | None = None, cover_ext: str = ".jpg") -> dict:
     chapters = sorted(story.chapters, key=lambda c: c.number)
     current = story.target_chapter_number
     current_chapter = next((c for c in chapters if c.number == current), None)
@@ -110,6 +169,11 @@ def story_view(story: Story) -> dict:
             for c in chapters
         ],
         "status": "ready",
+        "cover_url": (
+            cover_cache_url(user_id, story.story_id, cover_ext)
+            if user_id
+            else None
+        ),
     }
 
 
@@ -124,7 +188,11 @@ def update_operation(
     request["updated_at"] = datetime.now(timezone.utc).isoformat()
     if story is not None:
         request["story_id"] = story.story_id
-        request["story"] = story_view(story)
+        request["story"] = story_view(
+            story,
+            request.get("user_id"),
+            request.get("cover_ext", ".jpg"),
+        )
     github_put(
         f"story-cache/requests/{request['request_id']}.json",
         request,
@@ -132,11 +200,29 @@ def update_operation(
     )
 
 
-def cache_story(user_id: str, story: Story) -> None:
+def cache_story(
+    user_id: str,
+    story: Story,
+    *,
+    cover_ext: str | None = None,
+) -> None:
+    data = {"schema_version": 1, **story.as_dict()}
+    if cover_ext:
+        data["cover_ext"] = cover_ext
+        data["cover_url"] = cover_cache_url(user_id, story.story_id, cover_ext)
     github_put(
         f"story-cache/{safe(user_id)}/{safe(story.story_id)}/story.json",
-        {"schema_version": 1, **story.as_dict()},
+        data,
         f"story: update cache {user_id}/{story.story_id}",
+    )
+    github_put(
+        f"story-cache/{safe(user_id)}/current.json",
+        {
+            "schema_version": 1,
+            "story_id": story.story_id,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+        f"story: set current {user_id}/{story.story_id}",
     )
 
 
@@ -303,13 +389,24 @@ def main() -> int:
                 catalog=catalog,
             )
 
-            cache_story(user_id, story)
+            cover_ext = ".jpg"
+            cover = fetch_cover(story.source_url)
+            if cover:
+                cover_bytes, cover_ext = cover
+                github_put_bytes(
+                    f"story-cache/{safe(user_id)}/{safe(story.story_id)}/cover{cover_ext}",
+                    cover_bytes,
+                    f"story: cache cover {user_id}/{story.story_id}",
+                )
+
+            cache_story(user_id, story, cover_ext=cover_ext if cover else None)
             upload_drive(
                 folder_id,
                 "0neStoryTOC.epub",
                 catalog_path.read_bytes(),
             )
 
+            request["cover_ext"] = cover_ext if cover else ".jpg"
             update_operation(
                 request,
                 "completed",
