@@ -1,0 +1,36 @@
+name: Story request
+
+on:
+  repository_dispatch:
+    types: [story-request]
+
+permissions:
+  contents: write
+
+jobs:
+  story-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-story-scraper.txt
+
+      - name: Process Story request
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STORY_REQUEST_ID: ${{ github.event.client_payload.request_id }}
+          TANGTHU_GOOGLE_API_KEY: ${{ secrets.TANGTHU_GOOGLE_API_KEY }}
+          TANGTHU_APPS_SCRIPT_URL: ${{ secrets.TANGTHU_APPS_SCRIPT_URL }}
+          TANGTHU_UPLOAD_TOKEN: ${{ secrets.TANGTHU_UPLOAD_TOKEN }}
+        run: PYTHONPATH=. python scripts/run_story_request.py
