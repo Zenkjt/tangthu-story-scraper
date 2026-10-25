@@ -10,6 +10,7 @@ permissions:
 jobs:
   story-request:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,4 +34,4 @@ jobs:
           TANGTHU_GOOGLE_API_KEY: ${{ secrets.TANGTHU_GOOGLE_API_KEY }}
           TANGTHU_APPS_SCRIPT_URL: ${{ secrets.TANGTHU_APPS_SCRIPT_URL }}
           TANGTHU_UPLOAD_TOKEN: ${{ secrets.TANGTHU_UPLOAD_TOKEN }}
-        run: PYTHONPATH=. python scripts/run_story_request.py
+        run: PYTHONPATH=. python scripts/run_story_request_fresh.py
