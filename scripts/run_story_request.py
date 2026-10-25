@@ -95,12 +95,16 @@ def safe(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]", "_", str(value or "")) or "unknown"
 
 
-def find_registered_chapter_number(story: Story, source_url: str) -> int:
-    requested = str(source_url or "").strip().rstrip("/")
+def normalize_url(value: str) -> str:
+    return str(value or "").strip().rstrip("/")
+
+
+def find_registered_toc_index(story: Story, source_url: str) -> int:
+    requested = normalize_url(source_url)
     matches = [
-        chapter.number
-        for chapter in story.chapters
-        if str(chapter.url or "").strip().rstrip("/") == requested
+        entry.toc_index
+        for entry in story.chapters
+        if normalize_url(entry.url) == requested
     ]
     if len(matches) != 1:
         raise RuntimeError(
@@ -126,26 +130,33 @@ def story_view(
     user_id: str | None = None,
     cover_ext: str | None = None,
 ) -> dict:
-    chapters = sorted(story.chapters, key=lambda c: c.number)
-    current = story.target_chapter_number
-    current_chapter = next((c for c in chapters if c.number == current), None)
+    story.normalize_toc()
+    entries = sorted(story.chapters, key=lambda c: c.toc_index)
+    current = story.target_toc_index
+    current_entry = story.entry_at(current)
     result = {
         "story_id": story.story_id,
         "title": story.title,
         "author": story.author,
         "site": story.site,
         "source_url": story.source_url,
+        "current_toc_index": current,
+        "target_toc_index": story.target_toc_index,
+        "registered_toc_index": story.registered_toc_index,
         "current_chapter": current,
-        "current_chapter_title": current_chapter.title if current_chapter else None,
-        "total_chapters": len(chapters),
+        "current_chapter_title": current_entry.title if current_entry else None,
+        "total_toc_entries": len(entries),
+        "total_chapters": len(entries),
         "chapters": [
             {
-                "number": c.number,
-                "title": c.title,
-                "url": c.url,
-                "status": c.status.value,
+                "toc_index": entry.toc_index,
+                "number": entry.number,
+                "title": entry.title,
+                "url": entry.url,
+                "kind": entry.kind,
+                "status": entry.status.value,
             }
-            for c in chapters
+            for entry in entries
         ],
         "status": "ready",
     }
@@ -199,7 +210,7 @@ def cache_story(
         cover_ext = cached_cover_ext(user_id, story.story_id)
 
     data = {
-        "schema_version": 1,
+        "schema_version": 2,
         **story.as_dict(),
     }
     if cover_ext:
@@ -448,7 +459,8 @@ def main() -> int:
 
         if action == "register":
             story = app.registry.resolve_source(request["url"]).story
-            initial_chapter_number = find_registered_chapter_number(
+            story.normalize_toc()
+            registered_toc_index = find_registered_toc_index(
                 story,
                 request["url"],
             )
@@ -465,12 +477,10 @@ def main() -> int:
                 user_id,
                 request["url"],
                 story_sink,
-                start_chapter_number=initial_chapter_number,
+                start_toc_index=registered_toc_index,
                 catalog=catalog,
             )
 
-            # Fetch the exact registered position immediately so
-            # 0neStory.epub contains the requested opening content.
             story = app.trigger_next(
                 user_id,
                 story.story_id,
@@ -484,6 +494,8 @@ def main() -> int:
 
             if not story_path.exists():
                 raise RuntimeError("Không tạo được 0neStory.epub từ link đăng ký.")
+            if not catalog_path.exists():
+                raise RuntimeError("Không tạo được 0neStoryTOC.epub.")
 
             upload_drive(
                 folder_id,
@@ -521,19 +533,23 @@ def main() -> int:
             update_operation(
                 request,
                 "completed",
-                "Đã chuyển về chương trước.",
+                "Đã chuyển về vị trí trước trong mục lục.",
                 story,
                 cover_ext,
             )
             return 0
 
         if action == "jump":
-            chapter_number = int(request["chapter_number"])
+            toc_index = int(
+                request.get("toc_index", request.get("chapter_number", 0))
+            )
+            if toc_index < 1:
+                raise ValueError("TOC position must be >= 1")
 
             story = app.set_target(
                 user_id,
                 story_id,
-                chapter_number,
+                toc_index,
             )
 
             out = WORK / safe(user_id) / safe(story_id)
@@ -562,7 +578,7 @@ def main() -> int:
             update_operation(
                 request,
                 "completed",
-                f"Đã tải Chương {chapter_number}.",
+                f"Đã tải vị trí {toc_index} trong mục lục.",
                 story,
                 cover_ext,
             )
@@ -595,7 +611,7 @@ def main() -> int:
             update_operation(
                 request,
                 "completed",
-                "Đã tải/cập nhật chương.",
+                "Đã tải/cập nhật mục lục.",
                 story,
                 cover_ext,
             )
