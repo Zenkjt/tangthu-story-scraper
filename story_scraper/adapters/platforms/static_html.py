@@ -81,7 +81,9 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
         )
 
     @classmethod
-    def _looks_like_toc_link(cls, link, href: str, text: str, story_url: str) -> bool:
+    def _looks_like_toc_link(
+        cls, link, href: str, text: str, story_url: str
+    ) -> bool:
         if not text or cls._is_pagination_link(href, text):
             return False
         if not cls._same_story_path(story_url, href):
@@ -91,17 +93,18 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
         if cls._SECTION_TEXT_PATTERNS[0].match(text.strip()):
             return True
 
-        # Prefer links inside the site's chapter/TOC containers for arbitrary
-        # named sections such as "Đêm ấy", "Phần mở đầu", etc.
         node = link
         while node is not None and getattr(node, "name", None) not in {None, "body"}:
             classes = " ".join(node.get("class", []) or []).lower()
             node_id = str(node.get("id") or "").lower()
             marker = f"{classes} {node_id}"
-            if any(token in marker for token in (
-                "chapter", "chapters", "chuong", "chuong-list",
-                "list-chapter", "list-chapters", "toc", "muc-luc",
-            )):
+            if any(
+                token in marker
+                for token in (
+                    "chapter", "chapters", "chuong", "chuong-list",
+                    "list-chapter", "list-chapters", "toc", "muc-luc",
+                )
+            ):
                 return True
             node = getattr(node, "parent", None)
 
@@ -154,7 +157,9 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
             root = "/" + "/".join(parts[:-1])
             if not root.endswith("/"):
                 root += "/"
-            return parsed._replace(path=root, query="", fragment="").geturl()
+            return parsed._replace(
+                path=root, query="", fragment=""
+            ).geturl()
         return url
 
     def _index_pages(self, url: str) -> list[tuple[str, str]]:
@@ -185,7 +190,10 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
         parsed = urlparse(url)
         story_id = f"{parsed.netloc}{parsed.path.rstrip('/')}" or parsed.netloc
 
-        title = self.clean_text(first_soup.find("h1") or first_soup.find("title"))
+        title = self.clean_text(
+            first_soup.select_one(".book-title, .info h1, h1")
+            or first_soup.find("title")
+        )
         if not title:
             raise AdapterNotApplicable("static HTML story page has no title")
 
@@ -218,7 +226,9 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
                     Chapter(
                         number=number,
                         title=entry_title or (
-                            f"Chương {number}" if number is not None else "Mục"
+                            f"Chương {number}"
+                            if number is not None
+                            else "Mục"
                         ),
                         url=entry_url,
                         kind=kind,
@@ -242,50 +252,63 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
             index_url=index_url,
         )
 
+    def refresh_index(self, story: Story) -> Story:
+        return self.build_index(story.index_url or story.source_url)
+
     def refresh_tail(self, story: Story) -> list[Chapter]:
-        pages = self._index_pages(story.index_url or story.source_url)
+        refreshed = self.refresh_index(story)
         known = {chapter.url.rstrip("/") for chapter in story.chapters}
-        found: list[Chapter] = []
-
-        for page_url, html in pages:
-            for number, title, chapter_url, kind in self._toc_links(
-                html, page_url, story.source_url
-            ):
-                if chapter_url.rstrip("/") in known:
-                    continue
-                known.add(chapter_url.rstrip("/"))
-                found.append(
-                    Chapter(
-                        number=number,
-                        title=title,
-                        url=chapter_url,
-                        kind=kind,
-                    )
-                )
-
-        return found
+        return [
+            Chapter(
+                number=entry.number,
+                title=entry.title,
+                url=entry.url,
+                external_id=entry.external_id,
+                kind=entry.kind,
+            )
+            for entry in refreshed.chapters
+            if entry.url.rstrip("/") not in known
+        ]
 
     def fetch_chapter(self, chapter: Chapter) -> tuple[ChapterContent, bool]:
         html = self.fetch_html(chapter.url)
         soup = self.soup(html)
 
-        heading = soup.find("h1") or soup.find("h2")
-        title = self.clean_text(heading)
-        if title:
+        # TruyenFull and similar sites expose the actual chapter body in
+        # .chapter-c. Never fall back to the whole page when this container
+        # exists, otherwise breadcrumbs/TOC/navigation get saved as content.
+        heading_node = (
+            soup.select_one(".chapter-title")
+            or soup.find("h1")
+            or soup.find("h2")
+        )
+        title = self.clean_text(heading_node)
+        if title and (
+            "chapter" in title.lower()
+            or "chương" in title.lower()
+            or chapter.number is None
+        ):
             chapter.title = title
 
         container = (
-            heading.find_parent(["article", "main", "div"])
-            if heading else None
+            soup.select_one(".chapter-c")
+            or soup.select_one(".chapter-content")
+            or soup.select_one(".reading-content")
+            or soup.select_one(".entry-content")
         )
+
+        if container is None and heading_node is not None:
+            container = heading_node.find_parent(["article", "main"])
+
         if container is None:
-            container = soup.find("article") or soup.find("main") or soup.body
-        if container is None:
-            raise AdapterNotApplicable("page has no readable content container")
+            raise AdapterNotApplicable(
+                "page has no recognizable chapter content container"
+            )
 
         for node in container.select(
             "script, style, nav, form, button, input, select, footer, "
-            ".rating, .menu, .navigation, .comments, .comment"
+            ".rating, .menu, .navigation, .comments, .comment, "
+            ".chapter-nav, .social-share, .ads, .advertisement"
         ):
             node.decompose()
 

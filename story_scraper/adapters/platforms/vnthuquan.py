@@ -15,7 +15,7 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
     hosts = {"vnthuquan.net", "thuvien.vnthuquan.net"}
 
     _STORY_RE = re.compile(
-        r"^/TacPham/(?P<slug>[^/]+?-\d+)(?:/chuong-(?P<chapter>\d+))?/?$",
+        r"^/TacPham/(?P<slug>[^/]+?-\\d+)(?:/chuong-(?P<chapter>\\d+))?/?$",
         re.I,
     )
 
@@ -47,7 +47,7 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
             path = urlparse(href).path.rstrip("/")
             if not path.startswith(story_path + "/chuong-"):
                 continue
-            match = re.search(r"/chuong-(\d+)$", path, re.I)
+            match = re.search(r"/chuong-(\\d+)$", path, re.I)
             if not match:
                 continue
             number = int(match.group(1))
@@ -104,15 +104,16 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
             index_url=story_url,
         )
 
+    def refresh_index(self, story: Story) -> Story:
+        return self.build_index(story.index_url or story.source_url)
+
     def refresh_tail(self, story: Story) -> list[Chapter]:
-        index_url = story.index_url or story.source_url
-        html = self.fetch_html(index_url)
-        links = self._chapter_links(html, index_url)
+        refreshed = self.refresh_index(story)
         known = {chapter.url.rstrip("/") for chapter in story.chapters}
         return [
-            Chapter(number=n, title=t, url=u)
-            for n, t, u in links
-            if u.rstrip("/") not in known
+            Chapter(number=entry.number, title=entry.title, url=entry.url)
+            for entry in refreshed.chapters
+            if entry.url.rstrip("/") not in known
         ]
 
     def fetch_chapter(
@@ -130,13 +131,12 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
         self, html: str, url: str, chapter_number: int | None
     ) -> tuple[str, ChapterContent, bool]:
         soup = self.soup(html)
-        heading = soup.find("h1")
+        heading = soup.select_one(".chapter-title") or soup.find("h1")
         title = self.clean_text(heading)
 
-        if heading:
-            container = heading.find_parent(["article", "main", "div"])
-        else:
-            container = None
+        container = soup.select_one(".chapter-c, .chapter-content")
+        if container is None and heading:
+            container = heading.find_parent(["article", "main"])
         if container is None:
             container = soup.find("main") or soup.body
         if container is None:
@@ -144,7 +144,7 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
 
         for node in container.select(
             "script, style, nav, form, button, input, select, footer, "
-            ".rating, .menu, .navigation"
+            ".rating, .menu, .navigation, .comments, .comment"
         ):
             node.decompose()
 
