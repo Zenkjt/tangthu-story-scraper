@@ -7,8 +7,8 @@
   "action": "next",
   "url": null,
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: next.",
+  "status": "failed",
+  "message": "HTTP Error 403: Forbidden",
   "created_at": "2026-10-25T02:26:29.139Z",
-  "updated_at": "2026-10-25T02:26:44.223948+00:00"
+  "updated_at": "2026-10-25T02:26:46.027950+00:00"
 }
