@@ -125,7 +125,7 @@ class StoryEpubSink(EpubSink):
             "</body></html>"
         )
         book.add_item(cover)
-        book.add_metadata("OPF", "cover", "cover-image")
+        book.add_metadata("OPF", "meta", "", {"name": "cover", "content": "cover-image"})
 
     @staticmethod
     def _chapter_id(chapter: Chapter) -> str:
