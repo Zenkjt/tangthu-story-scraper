@@ -150,8 +150,8 @@
       "number": 14,
       "title": "Chương 14",
       "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-14/",
-      "status": "pending",
-      "content_hash": null,
+      "status": "complete",
+      "content_hash": "a627fbee26b0bd75ef03b617dde0dbb27b52a92983f5baa98d9bdd6cea74e4fe",
       "external_id": null,
       "toc_index": 15,
       "kind": "chapter"
@@ -287,9 +287,9 @@
       "kind": "chapter"
     }
   ],
-  "target_toc_index": 3,
+  "target_toc_index": 16,
   "registered_toc_index": 1,
   "index_url": "https://truyenfull.live/bi-mat-cua-emma/",
-  "target_chapter_number": 2,
+  "target_chapter_number": 15,
   "cover_ext": ".jpg"
 }
