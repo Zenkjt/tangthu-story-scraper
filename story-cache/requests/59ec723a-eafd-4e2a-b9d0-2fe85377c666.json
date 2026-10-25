@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "failed",
+  "message": "Unsupported mutation",
   "created_at": "2026-10-25T02:25:55.785Z",
-  "updated_at": "2026-10-25T02:26:10.093731+00:00"
+  "updated_at": "2026-10-25T02:26:16.786729+00:00"
 }
