@@ -200,8 +200,8 @@
       "number": 19,
       "title": "Chương 19",
       "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-19/",
-      "status": "pending",
-      "content_hash": null,
+      "status": "complete",
+      "content_hash": "bd58b9a28dd5032ceb2332f03051e4fe2b5d221951f5fc6d4f20aa9ecc8a72e0",
       "external_id": null,
       "toc_index": 20,
       "kind": "chapter"
@@ -287,9 +287,9 @@
       "kind": "chapter"
     }
   ],
-  "target_toc_index": 16,
+  "target_toc_index": 21,
   "registered_toc_index": 1,
   "index_url": "https://truyenfull.live/bi-mat-cua-emma/",
-  "target_chapter_number": 15,
+  "target_chapter_number": 20,
   "cover_ext": ".jpg"
 }
