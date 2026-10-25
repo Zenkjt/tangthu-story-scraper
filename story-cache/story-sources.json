@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-25T05:57:40.349556+00:00",
+  "updated_at": "2026-10-25T06:06:50.628908+00:00",
   "sources": [
     {
       "domain": "truyenfull.live",
       "status": "ok",
       "adapter": "static-html-family",
       "reason": "RESOLVED",
-      "timestamp": "2026-10-25T05:57:30.868495+00:00",
+      "timestamp": "2026-10-25T06:06:43.354280+00:00",
       "message": "Bình thường"
     },
     {
