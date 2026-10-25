@@ -2,8 +2,16 @@ name: Story request
 
 on:
   workflow_dispatch:
+    inputs:
+      request_id:
+        description: "Story request ID"
+        required: true
+        type: string
   repository_dispatch:
     types: [story-request]
+
+permissions:
+  contents: write
 
 jobs:
   run-story-request:
@@ -12,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -25,6 +35,9 @@ jobs:
 
       - name: Run story request
         env:
-          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GITHUB_TOKEN: ${{ github.token }}
+          STORY_REQUEST_ID: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.request_id || inputs.request_id }}
+          TANGTHU_APPS_SCRIPT_URL: ${{ secrets.TANGTHU_APPS_SCRIPT_URL }}
+          TANGTHU_UPLOAD_TOKEN: ${{ secrets.TANGTHU_UPLOAD_TOKEN }}
         run: |
           PYTHONPATH=. python scripts/run_story_request.py
