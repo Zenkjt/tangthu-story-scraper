@@ -434,6 +434,28 @@ class _NullSink:
         return None
 
 
+def entry_identity(entry):
+    if entry is None:
+        return None
+    if entry.external_id:
+        return ("external_id", entry.external_id)
+    url = normalize_url(entry.url)
+    if url:
+        return ("url", url)
+    if entry.number is not None:
+        return ("number", entry.kind, entry.number)
+    return ("fallback", entry.kind, entry.title)
+
+
+def find_entry_by_identity(story: Story, identity):
+    if identity is None:
+        return None
+    return next(
+        (entry for entry in story.chapters if entry_identity(entry) == identity),
+        None,
+    )
+
+
 def toc_signature(story: Story):
     story.normalize_toc()
     return tuple(
@@ -577,6 +599,8 @@ def main() -> int:
             story = app.set_target(
                 user_id, story_id, toc_index
             )
+            requested_entry = story.entry_at(toc_index)
+            requested_identity = entry_identity(requested_entry)
             before = toc_signature(story)
 
             story_sink = LocalEpubSink(story_path)
@@ -587,6 +611,22 @@ def main() -> int:
                 catalog=catalog,
             )
             after = toc_signature(story)
+
+            # Jump fetches the requested TOC entry immediately. trigger_next()
+            # normally advances the target to the following entry after a
+            # complete fetch, so restore the fetched entry as the current
+            # position for the GUI and subsequent navigation. Resolve it by
+            # stable identity because a tail refresh may renumber the TOC.
+            fetched_entry = find_entry_by_identity(
+                story, requested_identity
+            )
+            if fetched_entry is None:
+                raise RuntimeError(
+                    f"Không còn tìm thấy vị trí TOC {toc_index} sau khi tải."
+                )
+            story = app.set_target(
+                user_id, story_id, fetched_entry.toc_index
+            )
 
             cache_story(user_id, story, cover_ext)
             set_current_story(user_id, story.story_id)
