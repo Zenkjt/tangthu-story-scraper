@@ -1,10 +1,14 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
+
 from .models import Chapter, Story
+
 
 class AdapterNotApplicable(Exception):
     """Adapter candidate cannot handle this URL/site."""
+
 
 class SiteAdapter(ABC):
     name: str
@@ -24,9 +28,22 @@ class SiteAdapter(ABC):
     def build_index(self, url: str) -> Story:
         raise NotImplementedError
 
-    @abstractmethod
+    def refresh_index(self, story: Story) -> Story:
+        """Return a complete fresh source TOC snapshot."""
+        return self.build_index(story.index_url or story.source_url)
+
     def refresh_tail(self, story: Story) -> list[Chapter]:
-        raise NotImplementedError
+        """Legacy compatibility; full refresh is now the canonical path."""
+        refreshed = self.refresh_index(story)
+        known = {
+            (entry.external_id, entry.url.rstrip("/"))
+            for entry in story.chapters
+        }
+        return [
+            entry
+            for entry in refreshed.chapters
+            if (entry.external_id, entry.url.rstrip("/")) not in known
+        ]
 
     @abstractmethod
     def fetch_chapter(self, chapter: Chapter) -> tuple[str, bool]:
