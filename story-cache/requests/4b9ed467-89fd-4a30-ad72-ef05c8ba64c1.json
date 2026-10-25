@@ -2,13 +2,189 @@
   "schema_version": 1,
   "request_id": "4b9ed467-89fd-4a30-ad72-ef05c8ba64c1",
   "user_id": "g-f5a27f2a7738",
-  "story_id": null,
+  "story_id": "truyenfull.live/bi-mat-cua-emma",
   "folder_id": "1hR0H-wZejPM59ka-340atSlJCCYaaUbs",
   "action": "register",
   "url": "https://truyenfull.live/bi-mat-cua-emma/",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "completed",
+  "message": "Đăng ký truyện thành công.",
   "created_at": "2026-10-25T06:28:24.276Z",
-  "updated_at": "2026-10-25T06:28:36.942584+00:00"
+  "updated_at": "2026-10-25T06:28:48.411370+00:00",
+  "story": {
+    "story_id": "truyenfull.live/bi-mat-cua-emma",
+    "title": "Bí Mật Của Emma",
+    "author": "",
+    "site": "static-html-family",
+    "source_url": "https://truyenfull.live/bi-mat-cua-emma/",
+    "current_chapter": 1,
+    "current_chapter_title": "Chương 1",
+    "total_chapters": 27,
+    "chapters": [
+      {
+        "number": 1,
+        "title": "Chương 1",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-1/",
+        "status": "pending"
+      },
+      {
+        "number": 2,
+        "title": "Chương 2",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-2/",
+        "status": "pending"
+      },
+      {
+        "number": 3,
+        "title": "Chương 3",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-3/",
+        "status": "pending"
+      },
+      {
+        "number": 4,
+        "title": "Chương 4",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-4/",
+        "status": "pending"
+      },
+      {
+        "number": 5,
+        "title": "Chương 5",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-5/",
+        "status": "pending"
+      },
+      {
+        "number": 6,
+        "title": "Chương 6",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-6/",
+        "status": "pending"
+      },
+      {
+        "number": 7,
+        "title": "Chương 7",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-7/",
+        "status": "pending"
+      },
+      {
+        "number": 8,
+        "title": "Chương 8",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-8/",
+        "status": "pending"
+      },
+      {
+        "number": 9,
+        "title": "Chương 9",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-9/",
+        "status": "pending"
+      },
+      {
+        "number": 10,
+        "title": "Chương 10",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-10/",
+        "status": "pending"
+      },
+      {
+        "number": 11,
+        "title": "Chương 11",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-11/",
+        "status": "pending"
+      },
+      {
+        "number": 12,
+        "title": "Chương 12",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-12/",
+        "status": "pending"
+      },
+      {
+        "number": 13,
+        "title": "Chương 13",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-13/",
+        "status": "pending"
+      },
+      {
+        "number": 14,
+        "title": "Chương 14",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-14/",
+        "status": "pending"
+      },
+      {
+        "number": 15,
+        "title": "Chương 15",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-15/",
+        "status": "pending"
+      },
+      {
+        "number": 16,
+        "title": "Chương 16",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-16/",
+        "status": "pending"
+      },
+      {
+        "number": 17,
+        "title": "Chương 17",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-17/",
+        "status": "pending"
+      },
+      {
+        "number": 18,
+        "title": "Chương 18",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-18/",
+        "status": "pending"
+      },
+      {
+        "number": 19,
+        "title": "Chương 19",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-19/",
+        "status": "pending"
+      },
+      {
+        "number": 20,
+        "title": "Chương 20",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-20/",
+        "status": "pending"
+      },
+      {
+        "number": 21,
+        "title": "Chương 21",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-21/",
+        "status": "pending"
+      },
+      {
+        "number": 22,
+        "title": "Chương 22",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-22/",
+        "status": "pending"
+      },
+      {
+        "number": 23,
+        "title": "Chương 23",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-23/",
+        "status": "pending"
+      },
+      {
+        "number": 24,
+        "title": "Chương 24",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-24/",
+        "status": "pending"
+      },
+      {
+        "number": 25,
+        "title": "Chương 25",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-25/",
+        "status": "pending"
+      },
+      {
+        "number": 26,
+        "title": "Chương 26",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-26/",
+        "status": "pending"
+      },
+      {
+        "number": 27,
+        "title": "Chương 27",
+        "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-27/",
+        "status": "pending"
+      }
+    ],
+    "status": "ready",
+    "cover_url": "https://raw.githubusercontent.com/Zenkjt/tangthu-story-scraper/main/story-cache/g-f5a27f2a7738/truyenfull.live_bi-mat-cua-emma/cover.jpg"
+  }
 }
