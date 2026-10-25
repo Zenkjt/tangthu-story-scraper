@@ -33,18 +33,30 @@ class StoryApplication:
         url: str,
         epub: EpubSink,
         *,
+        start_toc_index: int | None = None,
         start_chapter_number: int | None = None,
         catalog: StoryCatalogEpubSink | None = None,
     ) -> Story:
         source: ResolvedStorySource = self.registry.resolve_source(url)
         story = source.story
-        if start_chapter_number is not None:
+        story.normalize_toc()
+
+        if start_toc_index is not None:
+            target = story.entry_at(int(start_toc_index))
+            if target is None:
+                raise ValueError(f"Unknown TOC position: {start_toc_index}")
+            story.target_toc_index = target.toc_index
+            story.registered_toc_index = target.toc_index
+        elif start_chapter_number is not None:
+            # Compatibility only for old callers; navigation itself remains TOC-based.
             target = next(
-                (c for c in story.chapters if c.number == int(start_chapter_number)),
+                (entry for entry in story.chapters if entry.number == int(start_chapter_number)),
                 None,
             )
-            if target is not None:
-                story.target_chapter_number = target.number
+            if target is None:
+                raise ValueError(f"Unknown source chapter number: {start_chapter_number}")
+            story.target_toc_index = target.toc_index
+
         self.manifest.save(user_id, story)
         return StoryEngine(
             self.state,
@@ -84,12 +96,12 @@ class StoryApplication:
     def load_current(self, user_id: str, story_id: str) -> Story:
         return self._load_story(user_id, story_id)
 
-    def set_target(self, user_id: str, story_id: str, number: int) -> Story:
+    def set_target(self, user_id: str, story_id: str, toc_index: int) -> Story:
         story = self._load_story(user_id, story_id)
-        target = next((c for c in story.chapters if c.number == int(number)), None)
+        target = story.entry_at(int(toc_index))
         if target is None:
-            raise ValueError(f"Unknown chapter: {number}")
-        story.target_chapter_number = target.number
+            raise ValueError(f"Unknown TOC position: {toc_index}")
+        story.target_toc_index = target.toc_index
         self.state.save(story)
         return story
 
@@ -101,13 +113,20 @@ class StoryApplication:
         if manifest_story is None:
             self.manifest.save(user_id, state_story)
             return state_story
-        runtime = {c.number: c for c in state_story.chapters}
+
+        runtime = {c.toc_index: c for c in state_story.chapters}
         for chapter in manifest_story.chapters:
-            old = runtime.get(chapter.number)
+            old = runtime.get(chapter.toc_index)
             if old is not None:
                 chapter.status = old.status
                 chapter.content_hash = old.content_hash
-        manifest_story.target_chapter_number = state_story.target_chapter_number
+
+        manifest_story.target_toc_index = state_story.target_toc_index
+        manifest_story.registered_toc_index = (
+            state_story.registered_toc_index
+            if state_story.registered_toc_index is not None
+            else manifest_story.registered_toc_index
+        )
         state_story.chapters = manifest_story.chapters
         return state_story
 

@@ -9,7 +9,7 @@ from .state import StoryStateStore
 
 
 class StoryEngine:
-    """One trigger fetches exactly one chapter; index discovery never fetches content."""
+    """One trigger fetches exactly one ordered TOC entry."""
 
     def __init__(self, state: StoryStateStore, epub: EpubSink,
                  adapter: SiteAdapter, catalog=None):
@@ -19,9 +19,9 @@ class StoryEngine:
         self.catalog = catalog
 
     def initialize(self, story: Story) -> Story:
-        story.chapters.sort(key=lambda c: c.number)
-        if story.target_chapter_number is None and story.chapters:
-            story.target_chapter_number = story.chapters[0].number
+        story.normalize_toc()
+        if story.target_toc_index is None and story.chapters:
+            story.target_toc_index = story.chapters[0].toc_index
         self.state.save(story)
         self.epub.create(story)
         if self.catalog is not None:
@@ -29,35 +29,28 @@ class StoryEngine:
         return story
 
     def next_target(self, story: Story):
-        if story.target_chapter_number is None:
-            return None
-        return next(
-            (c for c in story.chapters
-             if c.number == story.target_chapter_number),
-            None,
-        )
+        return story.entry_at(story.target_toc_index)
 
-    def jump_to_chapter(self, story: Story, number: int) -> Story:
-        target = next(
-            (c for c in story.chapters if c.number == int(number)),
-            None,
-        )
+    def jump_to_toc(self, story: Story, toc_index: int) -> Story:
+        story.normalize_toc()
+        target = story.entry_at(int(toc_index))
         if target is None:
-            raise ValueError(f"Unknown chapter: {number}")
-        story.target_chapter_number = target.number
+            raise ValueError(f"Unknown TOC position: {toc_index}")
+        story.target_toc_index = target.toc_index
         self.state.save(story)
         return story
 
     def trigger_next(self, story: Story) -> Story:
-        chapter = self.next_target(story)
+        story.normalize_toc()
+        entry = self.next_target(story)
 
-        if chapter is None:
+        if entry is None:
             self._refresh_tail(story)
-            chapter = self.next_target(story)
-            if chapter is None:
+            entry = self.next_target(story)
+            if entry is None:
                 return story
 
-        fetched = self.adapter.fetch_chapter(chapter)
+        fetched = self.adapter.fetch_chapter(entry)
         content, complete = fetched
 
         if isinstance(content, ChapterContent):
@@ -65,36 +58,34 @@ class StoryEngine:
         else:
             new_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
 
-        if chapter.content_hash is None:
-            self.epub.append(story, chapter, content)
-        elif chapter.content_hash != new_hash:
-            self.epub.replace(story, chapter, content)
+        if entry.content_hash is None:
+            self.epub.append(story, entry, content)
+        elif entry.content_hash != new_hash:
+            self.epub.replace(story, entry, content)
 
-        chapter.content_hash = new_hash
-        chapter.status = (
-            ChapterStatus.COMPLETE if complete else ChapterStatus.OPEN
-        )
+        entry.content_hash = new_hash
+        entry.status = ChapterStatus.COMPLETE if complete else ChapterStatus.OPEN
 
         if complete:
-            story.target_chapter_number = self._next_known_number(
-                story, chapter.number
+            story.target_toc_index = self._next_known_toc_index(
+                story, entry.toc_index
             )
         else:
-            story.target_chapter_number = chapter.number
+            story.target_toc_index = entry.toc_index
 
-        # TOC is checked/rebuilt only when the processed chapter was the
-        # last chapter known before this trigger.
-        if chapter.number == self._last_known_number(story):
-            before = self._chapter_index_signature(story)
+        # Preserve the existing lazy-tail rule: refresh only when the
+        # processed entry was the last known TOC entry.
+        if entry.toc_index == self._last_known_toc_index(story):
+            before = self._toc_signature(story)
             self._refresh_tail(story)
-            after = self._chapter_index_signature(story)
+            after = self._toc_signature(story)
 
             if self.catalog is not None and before != after:
                 self.catalog.update(story)
 
             if complete:
-                story.target_chapter_number = self._next_known_number(
-                    story, chapter.number
+                story.target_toc_index = self._next_known_toc_index(
+                    story, entry.toc_index
                 )
 
         self.state.save(story)
@@ -104,44 +95,52 @@ class StoryEngine:
         if not story.chapters:
             return story
 
-        story.chapters.sort(key=lambda c: c.number)
-        if story.target_chapter_number is None:
-            story.target_chapter_number = story.chapters[-1].number
+        story.normalize_toc()
+        if story.target_toc_index is None:
+            story.target_toc_index = story.chapters[-1].toc_index
         else:
             previous = [
-                c.number for c in story.chapters
-                if c.number < story.target_chapter_number
+                entry.toc_index
+                for entry in story.chapters
+                if entry.toc_index < story.target_toc_index
             ]
             if previous:
-                story.target_chapter_number = previous[-1]
+                story.target_toc_index = previous[-1]
 
         self.state.save(story)
         return story
 
     @staticmethod
-    def _next_known_number(story: Story, number: int) -> int | None:
-        following = [c.number for c in story.chapters if c.number > number]
+    def _next_known_toc_index(story: Story, toc_index: int) -> int | None:
+        following = [
+            entry.toc_index
+            for entry in story.chapters
+            if entry.toc_index > toc_index
+        ]
         return min(following) if following else None
 
     @staticmethod
-    def _last_known_number(story: Story) -> int | None:
-        return max((c.number for c in story.chapters), default=None)
+    def _last_known_toc_index(story: Story) -> int | None:
+        return max((entry.toc_index for entry in story.chapters), default=None)
 
     @staticmethod
-    def _chapter_index_signature(story: Story) -> tuple[tuple[int, str, str], ...]:
+    def _toc_signature(story: Story) -> tuple[tuple[int, str, str, str], ...]:
         return tuple(
-            (c.number, c.title, c.url)
-            for c in sorted(story.chapters, key=lambda c: c.number)
+            (entry.toc_index, entry.title, entry.url, entry.kind)
+            for entry in sorted(story.chapters, key=lambda item: item.toc_index)
         )
 
     def _refresh_tail(self, story: Story) -> None:
         updates = self.adapter.refresh_tail(story)
-        by_number = {c.number: c for c in story.chapters}
+        known_urls = {entry.url.rstrip("/") for entry in story.chapters}
+        next_index = max((entry.toc_index for entry in story.chapters), default=0) + 1
+
         for incoming in updates:
-            existing = by_number.get(incoming.number)
-            if existing is None:
-                story.chapters.append(incoming)
-            else:
-                existing.title = incoming.title or existing.title
-                existing.url = incoming.url or existing.url
-        story.chapters.sort(key=lambda c: c.number)
+            if incoming.url.rstrip("/") in known_urls:
+                continue
+            incoming.toc_index = next_index
+            next_index += 1
+            story.chapters.append(incoming)
+            known_urls.add(incoming.url.rstrip("/"))
+
+        story.normalize_toc()

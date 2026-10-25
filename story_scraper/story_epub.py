@@ -66,6 +66,7 @@ class StoryEpubSink(EpubSink):
         self._write(book)
 
     def _new_book(self, story: Story) -> epub.EpubBook:
+        story.normalize_toc()
         book = epub.EpubBook()
         book.set_identifier(f"tangthu-story-{story.story_id}")
         book.set_title(story.title or story.story_id)
@@ -86,7 +87,7 @@ class StoryEpubSink(EpubSink):
 
     @staticmethod
     def _chapter_id(chapter: Chapter) -> str:
-        return f"chapter-{chapter.number}"
+        return f"toc-{chapter.toc_index}"
 
     def _chapter_item(
         self,
@@ -94,9 +95,10 @@ class StoryEpubSink(EpubSink):
         chapter: Chapter,
         content: str | ChapterContent,
     ) -> epub.EpubHtml:
+        title = chapter.title or f"Vị trí {chapter.toc_index}"
         item = epub.EpubHtml(
-            title=chapter.title or f"Chương {chapter.number}",
-            file_name=f"chapter-{chapter.number}.xhtml",
+            title=title,
+            file_name=f"toc-{chapter.toc_index}.xhtml",
             lang=self.language,
             uid=self._chapter_id(chapter),
         )
@@ -134,7 +136,9 @@ class StoryEpubSink(EpubSink):
         content: str | ChapterContent,
     ) -> str:
         body, _ = self._html_and_assets(content)
-        safe_title = html.escape(chapter.title or f"Chương {chapter.number}")
+        safe_title = html.escape(
+            chapter.title or f"Vị trí {chapter.toc_index}"
+        )
         return (
             '<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">'
             f"<head><title>{safe_title}</title></head>"
@@ -157,8 +161,9 @@ class StoryEpubSink(EpubSink):
         book.set_language(self.language)
 
     def _sync_navigation(self, book: epub.EpubBook, story: Story) -> None:
+        story.normalize_toc()
         entries = []
-        for chapter in sorted(story.chapters, key=lambda item: item.number):
+        for chapter in sorted(story.chapters, key=lambda item: item.toc_index):
             item = book.get_item_with_id(self._chapter_id(chapter))
             if item is not None:
                 entries.append((chapter, item))
@@ -166,7 +171,7 @@ class StoryEpubSink(EpubSink):
         book.toc = tuple(
             epub.Link(
                 item.file_name,
-                chapter.title or f"Chương {chapter.number}",
+                chapter.title or f"Vị trí {chapter.toc_index}",
                 item.id,
             )
             for chapter, item in entries

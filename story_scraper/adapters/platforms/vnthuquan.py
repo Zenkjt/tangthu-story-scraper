@@ -21,16 +21,23 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
 
     @classmethod
     def matches(cls, url: str) -> bool:
-        return cls.host(url) in cls.hosts and bool(cls._STORY_RE.match(urlparse(url).path))
+        return cls.host(url) in cls.hosts and bool(
+            cls._STORY_RE.match(urlparse(url).path)
+        )
 
     def _story_url(self, url: str) -> str:
         parsed = urlparse(url)
         match = self._STORY_RE.match(parsed.path)
         if not match:
             raise ValueError(f"Unsupported vnthuquan URL: {url}")
-        return f"{parsed.scheme or 'https'}://{parsed.netloc}/TacPham/{match.group('slug')}/"
+        return (
+            f"{parsed.scheme or 'https'}://{parsed.netloc}"
+            f"/TacPham/{match.group('slug')}/"
+        )
 
-    def _chapter_links(self, html: str, base_url: str) -> list[tuple[int, str, str]]:
+    def _chapter_links(
+        self, html: str, base_url: str
+    ) -> list[tuple[int, str, str]]:
         soup = self.soup(html)
         story_path = urlparse(self._story_url(base_url)).path.rstrip("/")
         result: list[tuple[int, str, str]] = []
@@ -70,29 +77,58 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
                     author = candidate
                     break
 
+        chapter_links = self._chapter_links(html, story_url)
         chapters = [
             Chapter(number=number, title=chapter_title, url=chapter_url)
-            for number, chapter_title, chapter_url in self._chapter_links(html, story_url)
+            for number, chapter_title, chapter_url in chapter_links
         ]
+
         story_id = self._STORY_RE.match(urlparse(story_url).path).group("slug")
-        return Story(story_id=story_id, source_url=story_url, site=self.name,
-                     title=title, author=author, chapters=chapters,
-                     target_chapter_number=chapters[0].number if chapters else None)
+        entries = [
+            Chapter(
+                number=None,
+                title=title or story_id,
+                url=story_url,
+                kind="page",
+            )
+        ] + chapters
+
+        return Story(
+            story_id=story_id,
+            source_url=url,
+            site=self.name,
+            title=title,
+            author=author,
+            chapters=entries,
+            target_toc_index=1,
+            index_url=story_url,
+        )
 
     def refresh_tail(self, story: Story) -> list[Chapter]:
-        html = self.fetch_html(story.source_url)
-        links = self._chapter_links(html, story.source_url)
-        known = {chapter.number for chapter in story.chapters}
-        return [Chapter(number=n, title=t, url=u) for n, t, u in links if n not in known]
+        index_url = story.index_url or story.source_url
+        html = self.fetch_html(index_url)
+        links = self._chapter_links(html, index_url)
+        known = {chapter.url.rstrip("/") for chapter in story.chapters}
+        return [
+            Chapter(number=n, title=t, url=u)
+            for n, t, u in links
+            if u.rstrip("/") not in known
+        ]
 
-    def fetch_chapter(self, chapter: Chapter) -> tuple[ChapterContent, bool]:
+    def fetch_chapter(
+        self, chapter: Chapter
+    ) -> tuple[ChapterContent, bool]:
         html = self.fetch_html(chapter.url)
-        title, content, complete = self.parse_chapter_page(html, chapter.url, chapter.number)
+        title, content, complete = self.parse_chapter_page(
+            html, chapter.url, chapter.number
+        )
         if title:
             chapter.title = title
         return content, complete
 
-    def parse_chapter_page(self, html: str, url: str, chapter_number: int) -> tuple[str, ChapterContent, bool]:
+    def parse_chapter_page(
+        self, html: str, url: str, chapter_number: int | None
+    ) -> tuple[str, ChapterContent, bool]:
         soup = self.soup(html)
         heading = soup.find("h1")
         title = self.clean_text(heading)
@@ -112,5 +148,6 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
         ):
             node.decompose()
 
-        content = self.extract_images(container, url, f"chapter-{chapter_number}")
+        prefix = f"toc-{chapter_number or 1}"
+        content = self.extract_images(container, url, prefix)
         return title, content, True
