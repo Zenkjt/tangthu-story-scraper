@@ -95,6 +95,21 @@ def safe(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]", "_", str(value or "")) or "unknown"
 
 
+def find_registered_chapter_number(story: Story, source_url: str) -> int:
+    requested = str(source_url or "").strip().rstrip("/")
+    matches = [
+        chapter.number
+        for chapter in story.chapters
+        if str(chapter.url or "").strip().rstrip("/") == requested
+    ]
+    if len(matches) != 1:
+        raise RuntimeError(
+            "Không xác định được chính xác vị trí đăng ký trong TOC "
+            f"từ URL: {source_url}"
+        )
+    return matches[0]
+
+
 def cover_cache_dir(user_id: str, story_id: str) -> str:
     return f"{CACHE_ROOT}/{safe(user_id)}/{safe(story_id)}"
 
@@ -433,17 +448,33 @@ def main() -> int:
 
         if action == "register":
             story = app.registry.resolve_source(request["url"]).story
+            initial_chapter_number = find_registered_chapter_number(
+                story,
+                request["url"],
+            )
 
             out = WORK / safe(user_id) / safe(story.story_id)
             out.mkdir(parents=True, exist_ok=True)
 
             catalog_path = out / "0neStoryTOC.epub"
+            story_path = out / "0neStory.epub"
             catalog = StoryCatalogEpubSink(catalog_path)
+            story_sink = LocalEpubSink(story_path)
 
             story = app.initialize(
                 user_id,
                 request["url"],
-                _NullSink(),
+                story_sink,
+                start_chapter_number=initial_chapter_number,
+                catalog=catalog,
+            )
+
+            # Fetch the exact registered position immediately so
+            # 0neStory.epub contains the requested opening content.
+            story = app.trigger_next(
+                user_id,
+                story.story_id,
+                story_sink,
                 catalog=catalog,
             )
 
@@ -451,10 +482,18 @@ def main() -> int:
             cache_story(user_id, story, cover_ext)
             set_current_story(user_id, story.story_id)
 
+            if not story_path.exists():
+                raise RuntimeError("Không tạo được 0neStory.epub từ link đăng ký.")
+
             upload_drive(
                 folder_id,
                 "0neStoryTOC.epub",
                 catalog_path.read_bytes(),
+            )
+            upload_drive(
+                folder_id,
+                "0neStory.epub",
+                story_path.read_bytes(),
             )
 
             update_operation(
@@ -489,20 +528,45 @@ def main() -> int:
             return 0
 
         if action == "jump":
+            chapter_number = int(request["chapter_number"])
+
             story = app.set_target(
                 user_id,
                 story_id,
-                int(request["chapter_number"]),
+                chapter_number,
             )
+
+            out = WORK / safe(user_id) / safe(story_id)
+            out.mkdir(parents=True, exist_ok=True)
+            epub_path = out / "0neStory.epub"
+
+            if not download_drive_file(folder_id, "0neStory.epub", epub_path):
+                epub_path.unlink(missing_ok=True)
+
+            story_sink = LocalEpubSink(epub_path)
+            story = app.trigger_next(
+                user_id,
+                story_id,
+                story_sink,
+            )
+
             cache_story(user_id, story, cover_ext)
             set_current_story(user_id, story.story_id)
+
+            upload_drive(
+                folder_id,
+                "0neStory.epub",
+                epub_path.read_bytes(),
+            )
+
             update_operation(
                 request,
                 "completed",
-                "Đã chọn chương.",
+                f"Đã tải Chương {chapter_number}.",
                 story,
                 cover_ext,
             )
+            update_source_coverage()
             return 0
 
         if action == "next":
@@ -519,7 +583,6 @@ def main() -> int:
                 story_id,
                 story_sink,
             )
-
             cache_story(user_id, story, cover_ext)
             set_current_story(user_id, story.story_id)
 
