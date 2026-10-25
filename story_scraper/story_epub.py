@@ -13,7 +13,7 @@ from .core.models import Chapter, ChapterContent, Story
 
 
 class StoryEpubSink(EpubSink):
-    """Build 0neStory.epub as a fresh single-entry EPUB on every fetch."""
+    """Build 0neStory.epub from scratch for exactly one fetched entry."""
 
     COVER_PATH = Path(__file__).resolve().parents[1] / "assets" / "0neStory.bmp"
 
@@ -29,7 +29,7 @@ class StoryEpubSink(EpubSink):
         self.publisher = publisher
 
     def create(self, story: Story) -> None:
-        # Registration creates the initial EPUB from the fixed default cover.
+        # Registration creates a valid EPUB shell with the fixed default cover.
         self._write(self._new_book(story))
 
     def append(
@@ -38,7 +38,6 @@ class StoryEpubSink(EpubSink):
         chapter: Chapter,
         content: str | ChapterContent,
     ) -> None:
-        # 0neStory.epub is never cumulative: rebuild it from scratch.
         self._write(self._single_entry_book(story, chapter, content))
 
     def replace(
@@ -47,8 +46,17 @@ class StoryEpubSink(EpubSink):
         chapter: Chapter,
         content: str | ChapterContent,
     ) -> None:
-        # Keep the EpubSink API, but use the same overwrite semantics.
         self._write(self._single_entry_book(story, chapter, content))
+
+    def _base_book(self, story: Story) -> epub.EpubBook:
+        book = epub.EpubBook()
+        book.set_identifier(f"tangthu-story-{story.story_id}")
+        book.set_title(story.title or story.story_id)
+        book.set_language(self.language)
+        book.add_author(story.author or "Tàng Thư")
+        book.add_metadata("DC", "publisher", self.publisher)
+        book.add_metadata("DC", "source", story.source_url)
+        return book
 
     def _new_book(self, story: Story) -> epub.EpubBook:
         book = self._base_book(story)
@@ -77,22 +85,9 @@ class StoryEpubSink(EpubSink):
             ),
         )
 
-        if book.get_item_with_id("nav") is None:
-            book.add_item(epub.EpubNcx())
-            book.add_item(epub.EpubNav())
-
-        # One fixed cover page + exactly one story entry.
+        book.add_item(epub.EpubNcx())
+        book.add_item(epub.EpubNav())
         book.spine = ["cover", item]
-        return book
-
-    def _base_book(self, story: Story) -> epub.EpubBook:
-        book = epub.EpubBook()
-        book.set_identifier(f"tangthu-story-{story.story_id}")
-        book.set_title(story.title or story.story_id)
-        book.set_language(self.language)
-        book.add_author(story.author or "Tàng Thư")
-        book.add_metadata("DC", "publisher", self.publisher)
-        book.add_metadata("DC", "source", story.source_url)
         return book
 
     def _add_cover(self, book: epub.EpubBook) -> None:
@@ -107,7 +102,30 @@ class StoryEpubSink(EpubSink):
             gray.save(buffer, format="JPEG", quality=90, optimize=True)
             cover_bytes = buffer.getvalue()
 
-        book.set_cover("cover.jpg", cover_bytes, create_page=True)
+        image_item = epub.EpubItem(
+            uid="cover-image",
+            file_name="images/cover.jpg",
+            media_type="image/jpeg",
+            content=cover_bytes,
+        )
+        book.add_item(image_item)
+
+        cover = epub.EpubHtml(
+            uid="cover",
+            title="Bìa",
+            file_name="cover.xhtml",
+            lang=self.language,
+        )
+        cover.content = (
+            '<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">'
+            "<head><title>Bìa</title></head>"
+            '<body style="margin:0;text-align:center;">'
+            '<img src="images/cover.jpg" alt="Bìa 0neStory" '
+            'style="max-width:100%;height:auto;" />'
+            "</body></html>"
+        )
+        book.add_item(cover)
+        book.add_metadata("OPF", "cover", "cover-image")
 
     @staticmethod
     def _chapter_id(chapter: Chapter) -> str:

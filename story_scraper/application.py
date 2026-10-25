@@ -48,13 +48,18 @@ class StoryApplication:
             story.target_toc_index = target.toc_index
             story.registered_toc_index = target.toc_index
         elif start_chapter_number is not None:
-            # Compatibility only for old callers; navigation itself remains TOC-based.
             target = next(
-                (entry for entry in story.chapters if entry.number == int(start_chapter_number)),
+                (
+                    entry
+                    for entry in story.chapters
+                    if entry.number == int(start_chapter_number)
+                ),
                 None,
             )
             if target is None:
-                raise ValueError(f"Unknown source chapter number: {start_chapter_number}")
+                raise ValueError(
+                    f"Unknown source chapter number: {start_chapter_number}"
+                )
             story.target_toc_index = target.toc_index
 
         self.manifest.save(user_id, story)
@@ -75,20 +80,30 @@ class StoryApplication:
     ) -> Story:
         story = self._load_story(user_id, story_id)
         adapter = self.registry.resolve_instance(story.source_url)
-        story = StoryEngine(
+        return_story = StoryEngine(
             self.state,
             epub,
             adapter,
             catalog=catalog or self.catalog,
         ).trigger_next(story)
-        self.manifest.save(user_id, story)
-        return story
+        self.manifest.save(user_id, return_story)
+        return return_story
 
-    def trigger_previous(self, user_id: str, story_id: str, epub: EpubSink) -> Story:
+    def trigger_previous(
+        self,
+        user_id: str,
+        story_id: str,
+        epub: EpubSink,
+        *,
+        catalog: StoryCatalogEpubSink | None = None,
+    ) -> Story:
         story = self._load_story(user_id, story_id)
         adapter = self.registry.resolve_instance(story.source_url)
         story = StoryEngine(
-            self.state, epub, adapter, catalog=self.catalog
+            self.state,
+            epub,
+            adapter,
+            catalog=catalog or self.catalog,
         ).trigger_previous(story)
         self.manifest.save(user_id, story)
         return story
@@ -105,18 +120,35 @@ class StoryApplication:
         self.state.save(story)
         return story
 
+    @staticmethod
+    def _identity(entry):
+        if entry.external_id:
+            return ("external_id", entry.external_id)
+        url = str(entry.url or "").strip().rstrip("/")
+        if url:
+            return ("url", url)
+        if entry.number is not None:
+            return ("number", entry.kind, entry.number)
+        return ("fallback", entry.kind, entry.title)
+
     def _load_story(self, user_id: str, story_id: str) -> Story:
         state_story = self.state.load(story_id)
         if state_story is None:
-            raise FileNotFoundError(f"No story state found for story_id={story_id!r}")
+            raise FileNotFoundError(
+                f"No story state found for story_id={story_id!r}"
+            )
+
         manifest_story = self.manifest.load(user_id, story_id)
         if manifest_story is None:
             self.manifest.save(user_id, state_story)
             return state_story
 
-        runtime = {c.toc_index: c for c in state_story.chapters}
+        runtime = {
+            self._identity(chapter): chapter
+            for chapter in state_story.chapters
+        }
         for chapter in manifest_story.chapters:
-            old = runtime.get(chapter.toc_index)
+            old = runtime.get(self._identity(chapter))
             if old is not None:
                 chapter.status = old.status
                 chapter.content_hash = old.content_hash
@@ -128,6 +160,7 @@ class StoryApplication:
             else manifest_story.registered_toc_index
         )
         state_story.chapters = manifest_story.chapters
+        state_story.normalize_toc()
         return state_story
 
 
