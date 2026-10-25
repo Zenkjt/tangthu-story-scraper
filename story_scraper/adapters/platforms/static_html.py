@@ -187,7 +187,7 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
         first_html = pages[0][1]
         first_soup = self.soup(first_html)
 
-        parsed = urlparse(url)
+        parsed = urlparse(index_url)
         story_id = f"{parsed.netloc}{parsed.path.rstrip('/')}" or parsed.netloc
 
         title = self.clean_text(
@@ -216,7 +216,7 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
 
         for page_url, html in pages:
             for number, entry_title, entry_url, kind in self._toc_links(
-                html, page_url, url
+                html, page_url, index_url
             ):
                 key = entry_url.rstrip("/")
                 if key in seen:
@@ -274,9 +274,6 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
         html = self.fetch_html(chapter.url)
         soup = self.soup(html)
 
-        # TruyenFull and similar sites expose the actual chapter body in
-        # .chapter-c. Never fall back to the whole page when this container
-        # exists, otherwise breadcrumbs/TOC/navigation get saved as content.
         heading_node = (
             soup.select_one(".chapter-title")
             or soup.find("h1")
@@ -290,26 +287,50 @@ class StaticHTMLFamilyAdapter(BaseStaticHTMLAdapter):
         ):
             chapter.title = title
 
-        container = (
-            soup.select_one(".chapter-c")
-            or soup.select_one(".chapter-content")
-            or soup.select_one(".reading-content")
-            or soup.select_one(".entry-content")
-        )
+        is_non_chapter = chapter.kind in {"page", "section"}
 
-        if container is None and heading_node is not None:
-            container = heading_node.find_parent(["article", "main"])
+        if is_non_chapter:
+            container = (
+                soup.select_one(".description")
+                or soup.select_one(".desc-text")
+                or soup.select_one(".story-description")
+                or soup.select_one(".book-intro")
+                or soup.select_one(".introduction")
+                or soup.select_one("article")
+                or soup.select_one("main")
+            )
+        else:
+            # TruyenFull and similar sites expose the actual chapter body in
+            # .chapter-c. Never fall back to the whole page for a chapter,
+            # otherwise breadcrumbs/TOC/navigation get saved as content.
+            container = (
+                soup.select_one(".chapter-c")
+                or soup.select_one(".chapter-content")
+                or soup.select_one(".reading-content")
+                or soup.select_one(".entry-content")
+            )
+
+            if container is None and heading_node is not None:
+                container = heading_node.find_parent(["article", "main"])
 
         if container is None:
             raise AdapterNotApplicable(
-                "page has no recognizable chapter content container"
+                "page has no recognizable readable content container"
             )
 
-        for node in container.select(
-            "script, style, nav, form, button, input, select, footer, "
-            ".rating, .menu, .navigation, .comments, .comment, "
-            ".chapter-nav, .social-share, .ads, .advertisement"
-        ):
+        remove_selectors = [
+            "script", "style", "nav", "form", "button", "input", "select",
+            "footer", ".rating", ".menu", ".navigation", ".comments",
+            ".comment", ".chapter-nav", ".social-share", ".ads",
+            ".advertisement",
+        ]
+        if is_non_chapter:
+            remove_selectors.extend([
+                ".list-chapter", ".list-chapters", ".chapter-list",
+                ".chapters", ".toc", ".muc-luc",
+            ])
+
+        for node in container.select(", ".join(remove_selectors)):
             node.decompose()
 
         content = self.extract_images(
