@@ -47,7 +47,9 @@ def gh_get(path: str) -> dict:
 def github_put(path: str, payload: dict, message: str) -> None:
     github_put_bytes(
         path,
-        (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8"),
+        (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode(
+            "utf-8"
+        ),
         message,
     )
 
@@ -144,7 +146,9 @@ def story_view(
         "target_toc_index": story.target_toc_index,
         "registered_toc_index": story.registered_toc_index,
         "current_chapter": current,
-        "current_chapter_title": current_entry.title if current_entry else None,
+        "current_chapter_title": (
+            current_entry.title if current_entry else None
+        ),
         "total_toc_entries": len(entries),
         "total_chapters": len(entries),
         "chapters": [
@@ -161,7 +165,9 @@ def story_view(
         "status": "ready",
     }
     if user_id and cover_ext:
-        result["cover_url"] = raw_cover_url(user_id, story.story_id, cover_ext)
+        result["cover_url"] = raw_cover_url(
+            user_id, story.story_id, cover_ext
+        )
     return result
 
 
@@ -245,7 +251,8 @@ def set_current_story(user_id: str, story_id: str) -> None:
 
 def extract_meta(html: str, name: str) -> str | None:
     pattern = re.compile(
-        rf'<meta[^>]+(?:property|name)\s*=\s*["\']{re.escape(name)}["\'][^>]+content\s*=\s*["\']([^"\']+)',
+        rf'<meta[^>]+(?:property|name)\s*=\s*["\']'
+        rf'{re.escape(name)}["\'][^>]+content\s*=\s*["\']([^"\']+)',
         re.I,
     )
     match = pattern.search(html)
@@ -253,7 +260,8 @@ def extract_meta(html: str, name: str) -> str | None:
         return unescape(match.group(1).strip())
 
     pattern = re.compile(
-        rf'<meta[^>]+content\s*=\s*["\']([^"\']+)["\'][^>]+(?:property|name)\s*=\s*["\']{re.escape(name)}["\']',
+        rf'<meta[^>]+content\s*=\s*["\']([^"\']+)["\'][^>]+'
+        rf'(?:property|name)\s*=\s*["\']{re.escape(name)}["\']',
         re.I,
     )
     match = pattern.search(html)
@@ -264,7 +272,9 @@ def discover_cover_url(source_url: str) -> str | None:
     request = Request(
         source_url,
         headers={
-            "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)",
+            "User-Agent": (
+                "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)"
+            ),
             "Accept": "text/html,application/xhtml+xml",
             "Accept-Encoding": "identity",
         },
@@ -284,13 +294,20 @@ def download_cover(url: str) -> tuple[bytes, str]:
     request = Request(
         url,
         headers={
-            "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)",
-            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            "User-Agent": (
+                "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)"
+            ),
+            "Accept": (
+                "image/avif,image/webp,image/apng,image/svg+xml,"
+                "image/*,*/*;q=0.8"
+            ),
         },
     )
     with urlopen(request, timeout=60) as response:
         content = response.read()
-        content_type = str(response.headers.get("Content-Type") or "").lower()
+        content_type = str(
+            response.headers.get("Content-Type") or ""
+        ).lower()
 
     if "png" in content_type:
         ext = ".png"
@@ -300,7 +317,6 @@ def download_cover(url: str) -> tuple[bytes, str]:
         ext = ".gif"
     else:
         ext = ".jpg"
-
     return content, ext
 
 
@@ -308,7 +324,10 @@ def cache_cover(user_id: str, story: Story) -> str | None:
     try:
         cover_url = discover_cover_url(story.source_url)
         if not cover_url:
-            print("Cover: không tìm thấy og:image/twitter:image; tiếp tục không có bìa.")
+            print(
+                "Cover: không tìm thấy og:image/twitter:image; "
+                "tiếp tục không có bìa cache."
+            )
             return cached_cover_ext(user_id, story.story_id)
 
         content, ext = download_cover(cover_url)
@@ -319,40 +338,11 @@ def cache_cover(user_id: str, story: Story) -> str | None:
         )
         return ext
     except Exception as exc:
-        print(f"Cover: không tải được ({exc}); tiếp tục không có bìa.")
+        print(
+            f"Cover: không tải được ({exc}); tiếp tục không có bìa cache. "
+            f"{exc}"
+        )
         return cached_cover_ext(user_id, story.story_id)
-
-
-def drive_files(folder_id: str) -> list[dict]:
-    key = os.environ["TANGTHU_GOOGLE_API_KEY"]
-    q = quote(f"'{folder_id}' in parents and trashed = false")
-    fields = quote("files(id,name,size,mimeType,webContentLink)")
-    url = (
-        "https://www.googleapis.com/drive/v3/files"
-        f"?q={q}&fields={fields}&pageSize=100&key={quote(key)}"
-    )
-    req = Request(url, headers={"Accept": "application/json"})
-    with urlopen(req, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8")).get("files", [])
-
-
-def download_drive_file(folder_id: str, filename: str, target: Path) -> bool:
-    files = [f for f in drive_files(folder_id) if f.get("name") == filename]
-    if not files:
-        return False
-    if len(files) > 1:
-        raise RuntimeError(f"Drive có nhiều file {filename}; từ chối chọn mơ hồ.")
-
-    file_id = files[0]["id"]
-    key = os.environ["TANGTHU_GOOGLE_API_KEY"]
-    url = (
-        f"https://www.googleapis.com/drive/v3/files/{quote(file_id, safe='')}"
-        f"?alt=media&key={quote(key)}"
-    )
-    req = Request(url, headers={"User-Agent": "TangThu-Story-Action/1.0"})
-    with urlopen(req, timeout=120) as response:
-        target.write_bytes(response.read())
-    return True
 
 
 def upload_drive(folder_id: str, filename: str, payload: bytes) -> None:
@@ -374,7 +364,9 @@ def upload_drive(folder_id: str, filename: str, payload: bytes) -> None:
     with urlopen(req, timeout=180) as response:
         result = json.loads(response.read().decode("utf-8"))
     if not result.get("ok"):
-        raise RuntimeError(result.get("error", "Drive upload thất bại"))
+        raise RuntimeError(
+            result.get("error", "Drive upload thất bại")
+        )
 
 
 def update_source_coverage() -> None:
@@ -409,7 +401,9 @@ def update_source_coverage() -> None:
         {
             "schema_version": 1,
             "updated_at": datetime.now(timezone.utc).isoformat(),
-            "sources": sorted(merged.values(), key=lambda x: x["domain"]),
+            "sources": sorted(
+                merged.values(), key=lambda x: x["domain"]
+            ),
         },
         "story: update source coverage",
     )
@@ -440,6 +434,23 @@ class _NullSink:
         return None
 
 
+def toc_signature(story: Story):
+    story.normalize_toc()
+    return tuple(
+        (
+            entry.toc_index,
+            entry.number,
+            entry.title,
+            normalize_url(entry.url),
+            entry.external_id,
+            entry.kind,
+        )
+        for entry in sorted(
+            story.chapters, key=lambda item: item.toc_index
+        )
+    )
+
+
 def main() -> int:
     request = read_request(os.environ["STORY_REQUEST_ID"])
     action = request["action"]
@@ -448,7 +459,9 @@ def main() -> int:
     folder_id = request["folder_id"]
 
     try:
-        update_operation(request, "running", f"Đang xử lý: {action}.")
+        update_operation(
+            request, "running", f"Đang xử lý: {action}."
+        )
         WORK.mkdir(parents=True, exist_ok=True)
 
         app = build_application(
@@ -458,11 +471,12 @@ def main() -> int:
         )
 
         if action == "register":
-            story = app.registry.resolve_source(request["url"]).story
+            story = app.registry.resolve_source(
+                request["url"]
+            ).story
             story.normalize_toc()
             registered_toc_index = find_registered_toc_index(
-                story,
-                request["url"],
+                story, request["url"]
             )
 
             out = WORK / safe(user_id) / safe(story.story_id)
@@ -480,7 +494,6 @@ def main() -> int:
                 start_toc_index=registered_toc_index,
                 catalog=catalog,
             )
-
             story = app.trigger_next(
                 user_id,
                 story.story_id,
@@ -493,9 +506,13 @@ def main() -> int:
             set_current_story(user_id, story.story_id)
 
             if not story_path.exists():
-                raise RuntimeError("Không tạo được 0neStory.epub từ link đăng ký.")
+                raise RuntimeError(
+                    "Không tạo được 0neStory.epub từ link đăng ký."
+                )
             if not catalog_path.exists():
-                raise RuntimeError("Không tạo được 0neStoryTOC.epub.")
+                raise RuntimeError(
+                    "Không tạo được 0neStoryTOC.epub."
+                )
 
             upload_drive(
                 folder_id,
@@ -526,8 +543,19 @@ def main() -> int:
         app.state.save(story)
         app.manifest.save(user_id, story)
 
+        out = WORK / safe(user_id) / safe(story_id)
+        out.mkdir(parents=True, exist_ok=True)
+        story_path = out / "0neStory.epub"
+        catalog_path = out / "0neStoryTOC.epub"
+        catalog = StoryCatalogEpubSink(catalog_path)
+
         if action == "previous":
-            story = app.trigger_previous(user_id, story_id, _NullSink())
+            story = app.trigger_previous(
+                user_id,
+                story_id,
+                _NullSink(),
+                catalog=catalog,
+            )
             cache_story(user_id, story, cover_ext)
             set_current_story(user_id, story.story_id)
             update_operation(
@@ -547,33 +575,38 @@ def main() -> int:
                 raise ValueError("TOC position must be >= 1")
 
             story = app.set_target(
-                user_id,
-                story_id,
-                toc_index,
+                user_id, story_id, toc_index
             )
+            before = toc_signature(story)
 
-            out = WORK / safe(user_id) / safe(story_id)
-            out.mkdir(parents=True, exist_ok=True)
-            epub_path = out / "0neStory.epub"
-
-            if not download_drive_file(folder_id, "0neStory.epub", epub_path):
-                epub_path.unlink(missing_ok=True)
-
-            story_sink = LocalEpubSink(epub_path)
+            story_sink = LocalEpubSink(story_path)
             story = app.trigger_next(
                 user_id,
                 story_id,
                 story_sink,
+                catalog=catalog,
             )
+            after = toc_signature(story)
 
             cache_story(user_id, story, cover_ext)
             set_current_story(user_id, story.story_id)
 
+            if not story_path.exists():
+                raise RuntimeError(
+                    "Không tạo được 0neStory.epub cho vị trí yêu cầu."
+                )
             upload_drive(
                 folder_id,
                 "0neStory.epub",
-                epub_path.read_bytes(),
+                story_path.read_bytes(),
             )
+
+            if before != after and catalog_path.exists():
+                upload_drive(
+                    folder_id,
+                    "0neStoryTOC.epub",
+                    catalog_path.read_bytes(),
+                )
 
             update_operation(
                 request,
@@ -586,32 +619,46 @@ def main() -> int:
             return 0
 
         if action == "next":
-            out = WORK / safe(user_id) / safe(story_id)
-            out.mkdir(parents=True, exist_ok=True)
-            epub_path = out / "0neStory.epub"
+            before = toc_signature(story)
 
-            if not download_drive_file(folder_id, "0neStory.epub", epub_path):
-                epub_path.unlink(missing_ok=True)
-
-            story_sink = LocalEpubSink(epub_path)
+            story_sink = LocalEpubSink(story_path)
             story = app.trigger_next(
                 user_id,
                 story_id,
                 story_sink,
+                catalog=catalog,
             )
+            after = toc_signature(story)
+
             cache_story(user_id, story, cover_ext)
             set_current_story(user_id, story.story_id)
 
+            if not story_path.exists():
+                raise RuntimeError(
+                    "Không tạo được 0neStory.epub cho vị trí tiếp theo."
+                )
             upload_drive(
                 folder_id,
                 "0neStory.epub",
-                epub_path.read_bytes(),
+                story_path.read_bytes(),
             )
 
+            if before != after and catalog_path.exists():
+                upload_drive(
+                    folder_id,
+                    "0neStoryTOC.epub",
+                    catalog_path.read_bytes(),
+                )
+
+            message = (
+                "Đã tải nội dung và cập nhật mục lục."
+                if before != after
+                else "Đã tải nội dung."
+            )
             update_operation(
                 request,
                 "completed",
-                "Đã tải/cập nhật mục lục.",
+                message,
                 story,
                 cover_ext,
             )
