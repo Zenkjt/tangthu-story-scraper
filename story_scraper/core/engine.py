@@ -11,8 +11,13 @@ from .state import StoryStateStore
 class StoryEngine:
     """One trigger fetches exactly one ordered TOC entry."""
 
-    def __init__(self, state: StoryStateStore, epub: EpubSink,
-                 adapter: SiteAdapter, catalog=None):
+    def __init__(
+        self,
+        state: StoryStateStore,
+        epub: EpubSink,
+        adapter: SiteAdapter,
+        catalog=None,
+    ):
         self.state = state
         self.epub = epub
         self.adapter = adapter
@@ -58,10 +63,8 @@ class StoryEngine:
         else:
             new_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
 
-        if entry.content_hash is None:
-            self.epub.append(story, entry, content)
-        elif entry.content_hash != new_hash:
-            self.epub.replace(story, entry, content)
+        # Every fetch produces a brand-new one-chapter 0neStory.epub.
+        self.epub.append(story, entry, content)
 
         entry.content_hash = new_hash
         entry.status = ChapterStatus.COMPLETE if complete else ChapterStatus.OPEN
@@ -73,8 +76,6 @@ class StoryEngine:
         else:
             story.target_toc_index = entry.toc_index
 
-        # Preserve the existing lazy-tail rule: refresh only when the
-        # processed entry was the last known TOC entry.
         if entry.toc_index == self._last_known_toc_index(story):
             before = self._toc_signature(story)
             self._refresh_tail(story)
@@ -133,7 +134,10 @@ class StoryEngine:
     def _refresh_tail(self, story: Story) -> None:
         updates = self.adapter.refresh_tail(story)
         known_urls = {entry.url.rstrip("/") for entry in story.chapters}
-        next_index = max((entry.toc_index for entry in story.chapters), default=0) + 1
+        next_index = max(
+            (entry.toc_index for entry in story.chapters),
+            default=0,
+        ) + 1
 
         for incoming in updates:
             if incoming.url.rstrip("/") in known_urls:
