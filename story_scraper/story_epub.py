@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 import html
+import io
 import tempfile
 from pathlib import Path
 
 from ebooklib import epub
+from PIL import Image
 
 from .core.epub import EpubSink
 from .core.models import Chapter, ChapterContent, Story
 
 
 class StoryEpubSink(EpubSink):
-    """Persistent EPUB artifact for one continuously updated story."""
+    """Build 0neStory.epub as a fresh single-entry EPUB on every fetch."""
+
+    COVER_PATH = Path(__file__).resolve().parents[1] / "assets" / "0neStory.bmp"
 
     def __init__(
         self,
@@ -25,6 +29,7 @@ class StoryEpubSink(EpubSink):
         self.publisher = publisher
 
     def create(self, story: Story) -> None:
+        # Registration creates the initial EPUB from the fixed default cover.
         self._write(self._new_book(story))
 
     def append(
@@ -33,16 +38,8 @@ class StoryEpubSink(EpubSink):
         chapter: Chapter,
         content: str | ChapterContent,
     ) -> None:
-        if not self.output_path.exists():
-            self.create(story)
-        book = epub.read_epub(str(self.output_path))
-        self._sync_metadata(book, story)
-        item = self._chapter_item(book, chapter, content)
-        if book.get_item_with_id(item.id) is None:
-            book.add_item(item)
-            self._add_assets(book, content)
-        self._sync_navigation(book, story)
-        self._write(book)
+        # 0neStory.epub is never cumulative: rebuild it from scratch.
+        self._write(self._single_entry_book(story, chapter, content))
 
     def replace(
         self,
@@ -50,23 +47,45 @@ class StoryEpubSink(EpubSink):
         chapter: Chapter,
         content: str | ChapterContent,
     ) -> None:
-        if not self.output_path.exists():
-            self.create(story)
-        book = epub.read_epub(str(self.output_path))
-        self._sync_metadata(book, story)
-        item_id = self._chapter_id(chapter)
-        existing = book.get_item_with_id(item_id)
-        if existing is None:
-            book.add_item(self._chapter_item(book, chapter, content))
-        else:
-            existing.title = chapter.title or existing.title
-            existing.content = self._chapter_html(chapter, content)
-        self._add_assets(book, content)
-        self._sync_navigation(book, story)
-        self._write(book)
+        # Keep the EpubSink API, but use the same overwrite semantics.
+        self._write(self._single_entry_book(story, chapter, content))
 
     def _new_book(self, story: Story) -> epub.EpubBook:
+        book = self._base_book(story)
+        self._add_cover(book)
+        return book
+
+    def _single_entry_book(
+        self,
+        story: Story,
+        chapter: Chapter,
+        content: str | ChapterContent,
+    ) -> epub.EpubBook:
         story.normalize_toc()
+        book = self._base_book(story)
+        self._add_cover(book)
+
+        item = self._chapter_item(book, chapter, content)
+        book.add_item(item)
+        self._add_assets(book, content)
+
+        book.toc = (
+            epub.Link(
+                item.file_name,
+                chapter.title or f"Vị trí {chapter.toc_index}",
+                item.id,
+            ),
+        )
+
+        if book.get_item_with_id("nav") is None:
+            book.add_item(epub.EpubNcx())
+            book.add_item(epub.EpubNav())
+
+        # One fixed cover page + exactly one story entry.
+        book.spine = ["cover", item]
+        return book
+
+    def _base_book(self, story: Story) -> epub.EpubBook:
         book = epub.EpubBook()
         book.set_identifier(f"tangthu-story-{story.story_id}")
         book.set_title(story.title or story.story_id)
@@ -74,16 +93,21 @@ class StoryEpubSink(EpubSink):
         book.add_author(story.author or "Tàng Thư")
         book.add_metadata("DC", "publisher", self.publisher)
         book.add_metadata("DC", "source", story.source_url)
-
-        info = epub.EpubHtml(
-            title="Thông tin",
-            file_name="story.xhtml",
-            lang=self.language,
-        )
-        info.content = self._story_html(story)
-        book.add_item(info)
-        self._sync_navigation(book, story)
         return book
+
+    def _add_cover(self, book: epub.EpubBook) -> None:
+        if not self.COVER_PATH.exists():
+            raise FileNotFoundError(
+                f"Không tìm thấy bìa mặc định: {self.COVER_PATH}"
+            )
+
+        with Image.open(self.COVER_PATH) as image:
+            gray = image.convert("L")
+            buffer = io.BytesIO()
+            gray.save(buffer, format="JPEG", quality=90, optimize=True)
+            cover_bytes = buffer.getvalue()
+
+        book.set_cover("cover.jpg", cover_bytes, create_page=True)
 
     @staticmethod
     def _chapter_id(chapter: Chapter) -> str:
@@ -144,47 +168,6 @@ class StoryEpubSink(EpubSink):
             f"<head><title>{safe_title}</title></head>"
             f"<body><h1>{safe_title}</h1>{body}</body></html>"
         )
-
-    def _story_html(self, story: Story) -> str:
-        title = html.escape(story.title or story.story_id)
-        author = html.escape(story.author or "Không rõ")
-        source = html.escape(story.source_url)
-        return (
-            '<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">'
-            f"<head><title>{title}</title></head>"
-            f"<body><h1>{title}</h1><p>Tác giả: {author}</p>"
-            f'<p><a href="{source}">Nguồn truyện</a></p></body></html>'
-        )
-
-    def _sync_metadata(self, book: epub.EpubBook, story: Story) -> None:
-        book.set_title(story.title or story.story_id)
-        book.set_language(self.language)
-
-    def _sync_navigation(self, book: epub.EpubBook, story: Story) -> None:
-        story.normalize_toc()
-        entries = []
-        for chapter in sorted(story.chapters, key=lambda item: item.toc_index):
-            item = book.get_item_with_id(self._chapter_id(chapter))
-            if item is not None:
-                entries.append((chapter, item))
-
-        book.toc = tuple(
-            epub.Link(
-                item.file_name,
-                chapter.title or f"Vị trí {chapter.toc_index}",
-                item.id,
-            )
-            for chapter, item in entries
-        )
-
-        if book.get_item_with_id("nav") is None:
-            book.add_item(epub.EpubNcx())
-            book.add_item(epub.EpubNav())
-
-        story_item = book.get_item_with_id("story")
-        spine = [story_item] if story_item is not None else []
-        spine.extend(item for _, item in entries)
-        book.spine = spine
 
     def _write(self, book: epub.EpubBook) -> None:
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
