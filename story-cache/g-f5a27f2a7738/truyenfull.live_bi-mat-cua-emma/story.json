@@ -20,8 +20,8 @@
       "number": 1,
       "title": "Chương 1",
       "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-1/",
-      "status": "pending",
-      "content_hash": null,
+      "status": "complete",
+      "content_hash": "5b4bd4bd4cf379cdcdf94f822aec1f0374073eafe4db7c46bb7c451b55a7a7c9",
       "external_id": null,
       "toc_index": 2,
       "kind": "chapter"
@@ -287,9 +287,9 @@
       "kind": "chapter"
     }
   ],
-  "target_toc_index": 2,
+  "target_toc_index": 3,
   "registered_toc_index": 1,
   "index_url": "https://truyenfull.live/bi-mat-cua-emma/",
-  "target_chapter_number": 1,
+  "target_chapter_number": 2,
   "cover_ext": ".jpg"
 }
