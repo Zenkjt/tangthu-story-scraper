@@ -14,7 +14,7 @@ def test_wattpad_engine_builds_story_epub(tmp_path):
     adapter=WattpadAdapter(); story=adapter.build_index(STORY_URL)
     assert story.story_id=="107024873" and len(story.chapters)==45 and story.target_chapter_number==1
     assert story.chapters[0].external_id=="402782528"
-    engine=StoryEngine(StoryStateStore(tmp_path/"state"),StoryEpubSink(output,cover),adapter)
+    engine=StoryEngine(StoryStateStore(tmp_path/"state"),StoryEpubSink(output),adapter)
     engine.initialize(story)
     story=engine.trigger_next(story)
     assert story.chapters[0].status.value=="complete" and story.target_chapter_number==2
