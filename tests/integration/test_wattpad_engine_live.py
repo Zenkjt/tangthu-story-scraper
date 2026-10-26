@@ -16,11 +16,10 @@ ARTIFACT_DIR = Path("test-artifacts")
 def test_wattpad_engine_builds_story_epub(tmp_path):
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     output = ARTIFACT_DIR / "0neStory.epub"
-    cover = tmp_path / "0neStory.bmp"
-
     if output.exists():
         output.unlink()
 
+    cover = tmp_path / "0neStory.bmp"
     Image.new("L", (480, 800), 255).save(cover, format="BMP")
 
     adapter = WattpadAdapter()
