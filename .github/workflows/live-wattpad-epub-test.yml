@@ -1,0 +1,38 @@
+name: Live Wattpad EPUB Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-story-scraper.txt
+
+      - name: Generate EPUB from one live Wattpad chapter
+        run: |
+          PYTHONPATH=. python -m pytest -s -v tests/integration/test_wattpad_engine_live.py
+
+      - name: Upload generated EPUB
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wattpad-0neStory-epub
+          path: test-artifacts/0neStory.epub
+          if-no-files-found: error
+          retention-days: 7
