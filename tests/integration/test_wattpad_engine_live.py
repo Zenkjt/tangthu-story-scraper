@@ -14,16 +14,21 @@ def test_wattpad_engine_builds_story_epub(tmp_path):
     adapter=WattpadAdapter(); story=adapter.build_index(STORY_URL)
     assert story.story_id=="107024873" and len(story.chapters)==45 and story.target_chapter_number==1
     assert story.chapters[0].external_id=="402782528"
+
     engine=StoryEngine(StoryStateStore(tmp_path/"state"),StoryEpubSink(output),adapter)
     engine.initialize(story)
+
     story=engine.trigger_next(story)
     assert story.chapters[0].status.value=="complete" and story.target_chapter_number==2
+
     book=epub.read_epub(str(output))
     assert book.get_item_with_id("toc-1") is not None
-    assert len(book.get_item_with_id("chapter-1").content)>1000
-    assert book.get_item_with_id("chapter-2") is None
+    assert len(book.get_item_with_id("toc-1").content)>1000
+    assert book.get_item_with_id("toc-2") is None
+
     story=engine.trigger_next(story)
     assert story.chapters[1].status.value=="complete" and story.target_chapter_number==3
+
     book=epub.read_epub(str(output))
-    assert book.get_item_with_id("chapter-2") is not None
-    assert book.get_item_with_id("chapter-3") is None
+    assert book.get_item_with_id("toc-2") is not None
+    assert book.get_item_with_id("toc-3") is None
