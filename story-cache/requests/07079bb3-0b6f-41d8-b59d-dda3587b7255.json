@@ -2,13 +2,254 @@
   "schema_version": 1,
   "request_id": "07079bb3-0b6f-41d8-b59d-dda3587b7255",
   "user_id": "g-f5a27f2a7738",
-  "story_id": null,
+  "story_id": "300789076",
   "folder_id": "1hR0H-wZejPM59ka-340atSlJCCYaaUbs",
   "action": "register",
   "url": "https://www.wattpad.com/1188807126-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-l%E1%BB%9Di-d%E1%BA%ABn",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "completed",
+  "message": "Đăng ký truyện thành công.",
   "created_at": "2026-10-26T09:04:21.366Z",
-  "updated_at": "2026-10-26T09:04:35.815330+00:00"
+  "updated_at": "2026-10-26T09:04:50.438337+00:00",
+  "story": {
+    "story_id": "300789076",
+    "title": "[Yandere] Bóng Hồng Sa Ngã",
+    "author": "Veralyn_18",
+    "site": "wattpad",
+    "source_url": "https://www.wattpad.com/1188807126-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-l%E1%BB%9Di-d%E1%BA%ABn",
+    "current_toc_index": 2,
+    "target_toc_index": 2,
+    "registered_toc_index": 1,
+    "current_chapter": 2,
+    "current_chapter_title": "Chương 1: Con mồi",
+    "total_toc_entries": 28,
+    "total_chapters": 28,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 1,
+        "title": "Lời dẫn",
+        "url": "https://www.wattpad.com/1188807126-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-l%E1%BB%9Di-d%E1%BA%ABn",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 2,
+        "title": "Chương 1: Con mồi",
+        "url": "https://www.wattpad.com/1188807978-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-1-con-m%E1%BB%93i",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 3,
+        "number": 3,
+        "title": "Chương 2: Lật mặt ",
+        "url": "https://www.wattpad.com/1197242177-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-2-l%E1%BA%ADt-m%E1%BA%B7t",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 4,
+        "number": 4,
+        "title": "Chương 3: Gây sự",
+        "url": "https://www.wattpad.com/1198535534-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-3-g%C3%A2y-s%E1%BB%B1",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 5,
+        "number": 5,
+        "title": "Chương 4: Rượt đuổi ",
+        "url": "https://www.wattpad.com/1199236233-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-4-r%C6%B0%E1%BB%A3t-%C4%91u%E1%BB%95i",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 6,
+        "number": 6,
+        "title": "Chương 5: Hai mặt",
+        "url": "https://www.wattpad.com/1199348797-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-5-hai-m%E1%BA%B7t",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 7,
+        "number": 7,
+        "title": "Chương 6: Kẻ chủ mưu ",
+        "url": "https://www.wattpad.com/1201321088-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-6-k%E1%BA%BB-ch%E1%BB%A7-m%C6%B0u",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 8,
+        "number": 8,
+        "title": "Chương 7: Ấp ủ âm mưu",
+        "url": "https://www.wattpad.com/1203171683-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-7-%E1%BA%A5p-%E1%BB%A7-%C3%A2m-m%C6%B0u",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 9,
+        "number": 9,
+        "title": "Chương 8: Tình địch xuất hiện ",
+        "url": "https://www.wattpad.com/1204340739-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-8-t%C3%ACnh-%C4%91%E1%BB%8Bch-xu%E1%BA%A5t",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 10,
+        "number": 10,
+        "title": "Chương 9: Đặt chủ quyền ",
+        "url": "https://www.wattpad.com/1204640286-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-9-%C4%91%E1%BA%B7t-ch%E1%BB%A7-quy%E1%BB%81n",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 11,
+        "number": 11,
+        "title": "Chương 10: Manh mối & Cái bẫy ",
+        "url": "https://www.wattpad.com/1204750113-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-10-manh-m%E1%BB%91i-c%C3%A1i",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 12,
+        "number": 12,
+        "title": "Chương 11: Trêu ngươi ",
+        "url": "https://www.wattpad.com/1205899034-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-11-tr%C3%AAu-ng%C6%B0%C6%A1i",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 13,
+        "number": 13,
+        "title": "Chương 12: Nghi ngờ ",
+        "url": "https://www.wattpad.com/1206876725-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-12-nghi-ng%E1%BB%9D",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 14,
+        "number": 14,
+        "title": "Chương 13: Phát Hiện ",
+        "url": "https://www.wattpad.com/1207797218-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-13-ph%C3%A1t-hi%E1%BB%87n",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 15,
+        "number": 15,
+        "title": "Chương 14: Cứu rỗi hay bẫy lừa",
+        "url": "https://www.wattpad.com/1209869124-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-14-c%E1%BB%A9u-r%E1%BB%97i-hay",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 16,
+        "number": 16,
+        "title": "Chương 15: Giết người ",
+        "url": "https://www.wattpad.com/1212655882-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-15-gi%E1%BA%BFt-ng%C6%B0%E1%BB%9Di",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 17,
+        "number": 17,
+        "title": "Chương 16: Phó thác sai lầm ",
+        "url": "https://www.wattpad.com/1214298958-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-16-ph%C3%B3-th%C3%A1c-sai",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 18,
+        "number": 18,
+        "title": "Chương 17: Giam cầm ",
+        "url": "https://www.wattpad.com/1227699385-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-17-giam-c%E1%BA%A7m",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 19,
+        "number": 19,
+        "title": "Chương 18: Ép buộc ",
+        "url": "https://www.wattpad.com/1229050117-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-18-%C3%A9p-bu%E1%BB%99c",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 20,
+        "number": 20,
+        "title": "Chương 19: Ngục tù ",
+        "url": "https://www.wattpad.com/1230367786-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-19-ng%E1%BB%A5c-t%C3%B9",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 21,
+        "number": 21,
+        "title": "Chương 20: Kẻ điên trở về ",
+        "url": "https://www.wattpad.com/1232115169-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-20-k%E1%BA%BB-%C4%91i%C3%AAn-tr%E1%BB%9F-v%E1%BB%81",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 22,
+        "number": 22,
+        "title": "Chương 21: Phát điên",
+        "url": "https://www.wattpad.com/1232413936-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-21-ph%C3%A1t-%C4%91i%C3%AAn",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 23,
+        "number": 23,
+        "title": "Chương 22: Kế hoạch bỏ trốn ",
+        "url": "https://www.wattpad.com/1233969841-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-22-k%E1%BA%BF-ho%E1%BA%A1ch-b%E1%BB%8F",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 24,
+        "number": 24,
+        "title": "Chương 23: Bước đầu trong kế hoạch ",
+        "url": "https://www.wattpad.com/1234547302-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-23-b%C6%B0%E1%BB%9Bc-%C4%91%E1%BA%A7u-trong",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 25,
+        "number": 25,
+        "title": "Chương 24: Lâm nguy ",
+        "url": "https://www.wattpad.com/1236428407-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-24-l%C3%A2m-nguy",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 26,
+        "number": 26,
+        "title": "Chương 25: Định đoạt",
+        "url": "https://www.wattpad.com/1238566561-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-25-%C4%91%E1%BB%8Bnh-%C4%91o%E1%BA%A1t",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 27,
+        "number": 27,
+        "title": "Chương 26: Lời phán quyết",
+        "url": "https://www.wattpad.com/1240773845-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-26-l%E1%BB%9Di-ph%C3%A1n-quy%E1%BA%BFt",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 28,
+        "number": 28,
+        "title": "[END] Chương 27: Cách yêu của kẻ điên",
+        "url": "https://www.wattpad.com/1244110761-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-end-ch%C6%B0%C6%A1ng-27-c%C3%A1ch-y%C3%AAu",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready"
+  }
 }
