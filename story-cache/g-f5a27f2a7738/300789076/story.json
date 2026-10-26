@@ -20,8 +20,8 @@
       "number": 2,
       "title": "Chương 1: Con mồi",
       "url": "https://www.wattpad.com/1188807978-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3-ch%C6%B0%C6%A1ng-1-con-m%E1%BB%93i",
-      "status": "complete",
-      "content_hash": "82f7c84d97910f46f46c98ec59aab882b51642cdfb29d32df4de3b1fe04395a6",
+      "status": "pending",
+      "content_hash": null,
       "external_id": "1188807978",
       "toc_index": 2,
       "kind": "chapter"
@@ -287,8 +287,8 @@
       "kind": "chapter"
     }
   ],
-  "target_toc_index": 3,
+  "target_toc_index": 2,
   "registered_toc_index": 1,
   "index_url": "https://www.wattpad.com/story/300789076-yandere-b%C3%B3ng-h%E1%BB%93ng-sa-ng%C3%A3",
-  "target_chapter_number": 3
+  "target_chapter_number": 2
 }
