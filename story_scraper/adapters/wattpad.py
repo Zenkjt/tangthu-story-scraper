@@ -6,38 +6,51 @@ from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
 
 from ...core.html_adapter import BaseStaticHTMLAdapter
-from ...core.models import Chapter, ChapterContent, Story
+from ...core.models import Chapter, Story
 
 
 class WattpadAdapter(BaseStaticHTMLAdapter):
     name = "wattpad"
     family = "api-story"
     hosts = {"wattpad.com", "www.wattpad.com"}
+
     API_BASE = "https://www.wattpad.com/api/v3"
-    STORYTEXT_BASE = "https://www.wattpad.com/apiv2/storytext"
+    STORYTEXT_BASE = "https://www.wattpad.com/apiv2/"
+
     _STORY_RE = re.compile(
-        r"^/story/(?P<story_id>\d+)(?:-[^/]*)?/?$", re.I
+        r"^/story/(?P<story_id>\d+)(?:-[^/]*)?/?$",
+        re.I,
     )
+
     _PART_RE = re.compile(
-        r"^/(?P<part_id>\d+)(?:-[^/]*)?/?$", re.I
+        r"^/(?P<part_id>\d+)(?:-[^/]*)?/?$",
+        re.I,
     )
 
     @classmethod
     def matches(cls, url):
-        return cls.host(url) in cls.hosts and bool(
-            cls._STORY_RE.match(urlparse(url).path)
-            or cls._PART_RE.match(urlparse(url).path)
+        parsed = urlparse(url)
+
+        if cls.host(url) not in cls.hosts:
+            return False
+
+        return bool(
+            cls._STORY_RE.match(parsed.path)
+            or cls._PART_RE.match(parsed.path)
         )
 
     @classmethod
     def extract_ids(cls, url):
         path = urlparse(url).path
+
         match = cls._STORY_RE.match(path)
         if match:
             return int(match.group("story_id")), None
+
         match = cls._PART_RE.match(path)
         if match:
             return None, match.group("part_id")
+
         return None, None
 
     @staticmethod
@@ -45,45 +58,59 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
         req = Request(
             url,
             headers={
-                "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)"
+                "User-Agent": (
+                    "Mozilla/5.0 "
+                    "(compatible; TangThuStoryScraper/1.0)"
+                )
             },
         )
+
         with urlopen(req, timeout=30) as response:
-            return json.loads(response.read().decode("utf-8"))
+            raw = response.read()
+
+        return json.loads(raw.decode("utf-8"))
 
     def fetch_story(self, source_url):
         story_id, target_part_id = self.extract_ids(source_url)
+
         if story_id is None:
             if target_part_id is None:
                 raise ValueError(
                     f"Unsupported Wattpad URL: {source_url}"
                 )
-            story_id = int(
-                self._request_json(
-                    f"{self.API_BASE}/story_parts/{target_part_id}"
-                )["groupId"]
+
+            part_data = self._request_json(
+                f"{self.API_BASE}/story_parts/{target_part_id}"
             )
+
+            story_id = int(part_data["groupId"])
 
         fields = (
             "id,title,url,user(name,username),"
             "parts(id,title,url,deleted,draft,createDate,modifyDate),"
             "numParts,cover"
         )
+
         data = self._request_json(
             f"{self.API_BASE}/stories/{story_id}?"
             + urlencode({"fields": fields})
         )
+
         parts = [
             part
             for part in data.get("parts", [])
-            if not part.get("deleted") and not part.get("draft")
+            if not part.get("deleted")
+            and not part.get("draft")
         ]
+
         chapters = [
             Chapter(
                 number=index,
                 title=part.get("title") or f"Chương {index}",
-                url=part.get("url")
-                or f"https://www.wattpad.com/{part['id']}",
+                url=(
+                    part.get("url")
+                    or f"https://www.wattpad.com/{part['id']}"
+                ),
                 external_id=str(part["id"]),
             )
             for index, part in enumerate(parts, 1)
@@ -97,6 +124,7 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
             ),
             None,
         )
+
         story = Story(
             story_id=str(data["id"]),
             source_url=source_url,
@@ -109,9 +137,12 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
             ),
             index_url=data.get("url") or source_url,
         )
+
         story.normalize_toc()
+
         if target is not None:
             story.target_toc_index = target.toc_index
+
         return story
 
     def build_index(self, url):
@@ -122,47 +153,76 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
 
     def refresh_tail(self, story):
         refreshed = self.refresh_index(story)
+
         known = {
             chapter.external_id
             for chapter in story.chapters
             if chapter.external_id
         }
+
         return [
             chapter
             for chapter in refreshed.chapters
             if chapter.external_id not in known
         ]
 
-    def _fetch_storytext_html(self, chapter_id: str) -> str:
-        """Fetch Wattpad story text as UTF-8.
-
-        Wattpad's storytext endpoint can advertise an incorrect charset.
-        The payload itself is UTF-8; trusting the HTTP charset causes
-        Vietnamese text to be decoded into replacement characters.
+    def _fetch_storytext(self, chapter_id: str) -> str:
         """
-        url = f"{self.STORYTEXT_BASE}?" + urlencode({"id": chapter_id})
-        request = Request(
-            url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (compatible; TangThuStoryScraper/1.0)",
-                "Accept": "text/html,application/xhtml+xml",
-                "Accept-Encoding": "identity",
-            },
+        Fetch Wattpad chapter content.
+
+        IMPORTANT:
+        Do not use BaseStaticHTMLAdapter.fetch_html() here.
+
+        Wattpad's /apiv2/storytext endpoint may return encoded/binary
+        content when requested in its default/raw mode. Passing that
+        response through the generic HTML decoder can produce U+FFFD
+        replacement characters (�).
+
+        The documented JSON output returns the actual HTML/text in
+        the "text" field.
+        """
+
+        url = (
+            self.STORYTEXT_BASE
+            + "?"
+            + urlencode(
+                {
+                    "m": "storytext",
+                    "id": chapter_id,
+                    "output": "json",
+                }
+            )
         )
-        with urlopen(request, timeout=30) as response:
-            payload = response.read()
-            try:
-                return payload.decode("utf-8")
-            except UnicodeDecodeError:
-                charset = response.headers.get_content_charset() or "utf-8"
-                return payload.decode(charset, errors="strict")
+
+        payload = self._request_json(url)
+
+        text = payload.get("text")
+
+        if not isinstance(text, str):
+            raise ValueError(
+                "Wattpad storytext response does not contain "
+                f"a text field for chapter {chapter_id}"
+            )
+
+        if not text.strip():
+            raise ValueError(
+                f"Wattpad chapter {chapter_id} returned empty text"
+            )
+
+        return text
 
     def fetch_chapter(self, chapter):
         if not chapter.external_id:
-            raise ValueError("Wattpad chapter is missing external_id")
+            raise ValueError(
+                "Wattpad chapter is missing external_id"
+            )
 
-        html = self._fetch_storytext_html(chapter.external_id)
+        html = self._fetch_storytext(
+            chapter.external_id
+        )
+
         soup = self.soup(html)
+
         return (
             self.extract_images(
                 soup.body or soup,
@@ -171,3 +231,4 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
             ),
             True,
         )
+        
