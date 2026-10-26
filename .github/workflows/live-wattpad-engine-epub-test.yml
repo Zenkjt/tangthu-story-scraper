@@ -22,4 +22,4 @@ jobs:
           pip install pytest
 
       - name: Run live Wattpad engine + EPUB test
-        run: PYTHONPATH=. pytest -v tests/integration/test_wattpad_engine_live.py
+        run: PYTHONPATH=. pytest -s -v tests/integration/test_wattpad_engine_live.py
