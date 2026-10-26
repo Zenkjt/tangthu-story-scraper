@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-26T03:42:43.510591+00:00",
+  "updated_at": "2026-10-26T09:04:52.066305+00:00",
   "sources": [
     {
       "domain": "truyenfull.live",
@@ -23,7 +23,7 @@
       "status": "ok",
       "adapter": "wattpad",
       "reason": "RESOLVED",
-      "timestamp": "2026-10-26T03:42:31.509424+00:00",
+      "timestamp": "2026-10-26T09:04:37.955208+00:00",
       "message": "Bình thường"
     }
   ]
