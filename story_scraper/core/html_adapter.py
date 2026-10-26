@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import gzip
 import mimetypes
 import time
+import zlib
 from abc import ABC
 from html import unescape
 from http.client import IncompleteRead
@@ -27,7 +29,31 @@ class BaseStaticHTMLAdapter(BasePlatformAdapter, ABC):
             try:
                 with urlopen(request, timeout=20) as response:
                     charset = response.headers.get_content_charset() or "utf-8"
-                    return response.read(), charset
+                    payload = response.read()
+                    encoding = (
+                        response.headers.get("Content-Encoding", "")
+                        .strip()
+                        .lower()
+                    )
+
+                    if encoding == "gzip":
+                        payload = gzip.decompress(payload)
+                    elif encoding == "deflate":
+                        try:
+                            payload = zlib.decompress(payload)
+                        except zlib.error:
+                            payload = zlib.decompress(payload, -zlib.MAX_WBITS)
+                    elif encoding == "br":
+                        try:
+                            import brotli
+                        except ImportError as exc:
+                            raise RuntimeError(
+                                "Brotli response received but the 'brotli' "
+                                "package is not installed"
+                            ) from exc
+                        payload = brotli.decompress(payload)
+
+                    return payload, charset
             except (IncompleteRead, URLError) as exc:
                 last_error = exc
                 if attempt == 2:
@@ -42,7 +68,9 @@ class BaseStaticHTMLAdapter(BasePlatformAdapter, ABC):
             headers={
                 "User-Agent": self.user_agent,
                 "Accept": "text/html,application/xhtml+xml",
-                "Accept-Encoding": "identity",
+                # Let Wattpad/CDN choose a normal text compression.
+                # _read_url() explicitly decompresses the response.
+                "Accept-Encoding": "gzip, deflate",
             },
         )
         payload, charset = self._read_url(request)
@@ -77,8 +105,11 @@ class BaseStaticHTMLAdapter(BasePlatformAdapter, ABC):
 
     @staticmethod
     def absolute_links(base_url: str, nodes) -> list[str]:
-        return [BaseStaticHTMLAdapter.absolute_url(base_url, node.get("href", ""))
-                for node in nodes if node.get("href")]
+        return [
+            BaseStaticHTMLAdapter.absolute_url(base_url, node.get("href", ""))
+            for node in nodes
+            if node.get("href")
+        ]
 
     def extract_images(self, container, base_url: str, prefix: str) -> ChapterContent:
         assets: list[ChapterAsset] = []
