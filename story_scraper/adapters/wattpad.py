@@ -166,51 +166,66 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
             if chapter.external_id not in known
         ]
 
-    def _fetch_storytext(self, chapter_id: str) -> str:
-        """
-        Fetch Wattpad chapter content.
+def _fetch_storytext(self, chapter_id: str) -> str:
+    url = (
+        self.STORYTEXT_BASE
+        + "?"
+        + urlencode(
+            {
+                "m": "storytext",
+                "id": chapter_id,
+            }
+        )
+    )
 
-        IMPORTANT:
-        Do not use BaseStaticHTMLAdapter.fetch_html() here.
-
-        Wattpad's /apiv2/storytext endpoint may return encoded/binary
-        content when requested in its default/raw mode. Passing that
-        response through the generic HTML decoder can produce U+FFFD
-        replacement characters (�).
-
-        The documented JSON output returns the actual HTML/text in
-        the "text" field.
-        """
-
-        url = (
-            self.STORYTEXT_BASE
-            + "?"
-            + urlencode(
-                {
-                    "m": "storytext",
-                    "id": chapter_id,
-                    "output": "json",
-                }
+    req = Request(
+        url,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 "
+                "(compatible; TangThuStoryScraper/1.0)"
             )
+        },
+    )
+
+    with urlopen(req, timeout=30) as response:
+        raw = response.read()
+
+        content_type = response.headers.get("Content-Type", "")
+        content_encoding = response.headers.get("Content-Encoding", "")
+        content_length = response.headers.get("Content-Length", "")
+
+    print("=== WATTPAD RAW DEBUG ===")
+    print(f"chapter_id={chapter_id}")
+    print(f"status=200")
+    print(f"content-type={content_type}")
+    print(f"content-encoding={content_encoding}")
+    print(f"content-length={content_length}")
+    print(f"raw-length={len(raw)}")
+    print(f"first-64-bytes-hex={raw[:64].hex()}")
+    print("=========================")
+
+    debug_path = "wattpad_raw_debug.bin"
+
+    with open(debug_path, "wb") as debug_file:
+        debug_file.write(raw)
+
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError(
+            "Wattpad raw storytext is not valid UTF-8. "
+            f"Raw response saved to {debug_path}. "
+            f"Decode error: {exc}"
+        ) from exc
+
+    if not text.strip():
+        raise ValueError(
+            f"Wattpad chapter {chapter_id} returned empty text"
         )
 
-        payload = self._request_json(url)
-
-        text = payload.get("text")
-
-        if not isinstance(text, str):
-            raise ValueError(
-                "Wattpad storytext response does not contain "
-                f"a text field for chapter {chapter_id}"
-            )
-
-        if not text.strip():
-            raise ValueError(
-                f"Wattpad chapter {chapter_id} returned empty text"
-            )
-
-        return text
-
+    return text
+    
     def fetch_chapter(self, chapter):
         if not chapter.external_id:
             raise ValueError(
