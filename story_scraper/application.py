@@ -36,8 +36,11 @@ class StoryApplication:
         start_toc_index: int | None = None,
         start_chapter_number: int | None = None,
         catalog: StoryCatalogEpubSink | None = None,
+        resolved_source: ResolvedStorySource | None = None,
     ) -> Story:
-        source: ResolvedStorySource = self.registry.resolve_source(url)
+        # Registration may already have resolved the source in order to
+        # determine the exact registration TOC position. Reuse that result.
+        source = resolved_source or self.registry.resolve_source(url)
         story = source.story
         story.normalize_toc()
 
@@ -72,12 +75,9 @@ class StoryApplication:
         )
         story = engine.initialize(story)
 
-        # Only adapters that explicitly opt in fetch during registration.
-        # Wattpad chapter URLs opt in; other adapters retain old behavior.
-        if source.adapter.fetch_initial_target_on_register(story):
-            story = engine.trigger_next(story)
-            self.manifest.save(user_id, story)
-
+        # Registration fetch is orchestrated by the request layer so that
+        # every registration performs exactly one trigger. Adapter hooks may
+        # describe eligibility, but they must not cause a hidden second fetch.
         return story
 
     def trigger_next(
