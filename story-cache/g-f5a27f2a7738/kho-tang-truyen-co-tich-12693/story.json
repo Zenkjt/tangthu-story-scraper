@@ -11,7 +11,7 @@
       "title": "Kho Tàng Truyện Cổ Tích",
       "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/",
       "status": "complete",
-      "content_hash": "b222377cffd071984bd166e235918db3cfb28723dd40442cf0268494bb953482",
+      "content_hash": "f4600f01d6c03bbdd370703ce848ddb953d087adab4bcc6888e9f0e041dd5ac9",
       "external_id": null,
       "toc_index": 1,
       "kind": "page"
@@ -1021,6 +1021,7 @@
   "registered_toc_index": 1,
   "current_toc_index": 1,
   "index_url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/",
-  "cover_url": null,
-  "target_chapter_number": 1
+  "cover_url": "https://vietnamthuquan.eu/userfiles/images/hinhbiasach09/12693_Kho_T%C3%A0ng_Truy%E1%BB%87n_C%E1%BB%95_T%C3%ADch_20250922_1047.jpg",
+  "target_chapter_number": 1,
+  "cover_ext": ".jpg"
 }
