@@ -45,6 +45,10 @@ class SiteAdapter(ABC):
             if (entry.external_id, entry.url.rstrip("/")) not in known
         ]
 
+    def fetch_initial_target_on_register(self, story: Story) -> bool:
+        """Whether registration should immediately fetch the selected target."""
+        return False
+
     @abstractmethod
     def fetch_chapter(self, chapter: Chapter) -> tuple[str, bool]:
         raise NotImplementedError
