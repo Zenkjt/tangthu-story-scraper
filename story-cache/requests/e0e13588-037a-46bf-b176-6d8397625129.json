@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "failed",
+  "message": "closing parenthesis ']' does not match opening parenthesis '(' on line 112 (vnthuquan.py, line 113)",
   "created_at": "2026-10-27T08:01:55.917Z",
-  "updated_at": "2026-10-27T08:02:12.575657+00:00"
+  "updated_at": "2026-10-27T08:02:13.950247+00:00"
 }
