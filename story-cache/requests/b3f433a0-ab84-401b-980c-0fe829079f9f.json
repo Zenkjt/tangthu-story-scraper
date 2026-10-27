@@ -2,13 +2,70 @@
   "schema_version": 1,
   "request_id": "b3f433a0-ab84-401b-980c-0fe829079f9f",
   "user_id": "g-f5a27f2a7738",
-  "story_id": null,
+  "story_id": "320882705",
   "folder_id": "1hR0H-wZejPM59ka-340atSlJCCYaaUbs",
   "action": "register",
   "url": "https://www.wattpad.com/1264858434-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "completed",
+  "message": "Đăng ký truyện thành công.",
   "created_at": "2026-10-27T02:11:38.070Z",
-  "updated_at": "2026-10-27T02:11:51.281583+00:00"
+  "updated_at": "2026-10-27T02:12:02.802403+00:00",
+  "story": {
+    "story_id": "320882705",
+    "title": "Đêm Trắng - Fyodor Mikhailovich Dostoevsky",
+    "author": "404 Name Not Found",
+    "site": "wattpad",
+    "source_url": "https://www.wattpad.com/1264858434-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+    "current_toc_index": 2,
+    "target_toc_index": 2,
+    "registered_toc_index": 1,
+    "current_chapter": 2,
+    "current_chapter_title": "ĐÊM THỨ HAI",
+    "total_toc_entries": 5,
+    "total_chapters": 5,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 1,
+        "title": "ĐÊM THỨ NHẤT",
+        "url": "https://www.wattpad.com/1264858434-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 2,
+        "title": "ĐÊM THỨ HAI",
+        "url": "https://www.wattpad.com/1264859753-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 3,
+        "number": 3,
+        "title": "ĐÊM THỨ BA",
+        "url": "https://www.wattpad.com/1264862439-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 4,
+        "number": 4,
+        "title": "ĐÊM THỨ TƯ",
+        "url": "https://www.wattpad.com/1264863162-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 5,
+        "number": 5,
+        "title": "BUỔI SÁNG",
+        "url": "https://www.wattpad.com/1264864133-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-bu%E1%BB%95i-s%C3%A1ng",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready"
+  }
 }
