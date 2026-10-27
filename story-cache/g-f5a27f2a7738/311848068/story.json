@@ -4,7 +4,7 @@
   "source_url": "https://www.wattpad.com/story/311848068-anh-em-nh%C3%A0-karamazov-f-dostoievsky",
   "site": "wattpad",
   "title": "Anh em nhà Karamazov - F. Dostoievsky",
-  "author": "404 Name Not Found",
+  "author": "_MeoBayMau_",
   "chapters": [
     {
       "number": 1,
@@ -419,6 +419,9 @@
   ],
   "target_toc_index": 2,
   "registered_toc_index": 1,
+  "current_toc_index": 1,
   "index_url": "https://www.wattpad.com/story/311848068-anh-em-nh%C3%A0-karamazov-f-dostoievsky",
-  "target_chapter_number": 2
+  "cover_url": "https://img.wattpad.com/cover/311848068-256-k675061.jpg",
+  "target_chapter_number": 2,
+  "cover_ext": ".jpg"
 }
