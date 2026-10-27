@@ -2,13 +2,838 @@
   "schema_version": 1,
   "request_id": "06b0c36f-3455-4dc8-8cad-8d4f421c2ec0",
   "user_id": "g-f5a27f2a7738",
-  "story_id": null,
+  "story_id": "kho-tang-truyen-co-tich-12693",
   "folder_id": "1hR0H-wZejPM59ka-340atSlJCCYaaUbs",
   "action": "register",
   "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "completed",
+  "message": "Đăng ký truyện thành công.",
   "created_at": "2026-10-27T08:05:41.682Z",
-  "updated_at": "2026-10-27T08:05:56.177920+00:00"
+  "updated_at": "2026-10-27T08:06:14.250496+00:00",
+  "story": {
+    "story_id": "kho-tang-truyen-co-tich-12693",
+    "title": "Kho Tàng Truyện Cổ Tích",
+    "author": "",
+    "site": "vnthuquan",
+    "source_url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/",
+    "current_toc_index": 1,
+    "target_toc_index": 2,
+    "registered_toc_index": 1,
+    "current_chapter": 1,
+    "current_chapter_title": "Kho Tàng Truyện Cổ Tích",
+    "total_toc_entries": 101,
+    "total_chapters": 101,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": null,
+        "title": "Kho Tàng Truyện Cổ Tích",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/",
+        "kind": "page",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 1,
+        "title": "Lời Dẫn",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-1",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 3,
+        "number": 2,
+        "title": "Tiến »",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-2",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 4,
+        "number": 3,
+        "title": "Phần thứ nhất - I. BẢN CHẤT TRUYỆN CỔ TÍCH",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-3",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 5,
+        "number": 4,
+        "title": "6. PHÂN BIỆT TRUYỆN CỔ TÍCH VỚI LỊCH SỬ VÀ VỚI TIỂU THUYẾT",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-4",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 6,
+        "number": 5,
+        "title": "II - LAI LỊCH TRUYỆN CỔ TÍCH",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-5",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 7,
+        "number": 6,
+        "title": "III. TRUYỆN CỔ VIỆT NAM QUA CÁC THỜI ĐẠI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-6",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 8,
+        "number": 7,
+        "title": "PHẦN THỨ HAI -",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-7",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 9,
+        "number": 8,
+        "title": "I. NGUỒN GỐC SỰ VẬT",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-8",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 10,
+        "number": 9,
+        "title": "2. SỰ TÍCH TRẦU, CAU VÀ VÔI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-9",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 11,
+        "number": 10,
+        "title": "3. SỰ TÍCH TRÁI SẦU RIÊNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-10",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 12,
+        "number": 11,
+        "title": "4. SỰ TÍCH CÂY HUYẾT DỤ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-11",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 13,
+        "number": 12,
+        "title": "5. SỰ TÍCH CHIM HÍT CÔ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-12",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 14,
+        "number": 13,
+        "title": "6. SỰ TÍCH CHIM TU HÚ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-13",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 15,
+        "number": 14,
+        "title": "7. SỰ TÍCH CHIM QUỐC",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-14",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 16,
+        "number": 15,
+        "title": "8. SỰ TÍCH CHIM NĂM-TRÂU-SÁU-CỘT VÀ CHIM BẮT-CÔ-TRÓI-CỘT",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-15",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 17,
+        "number": 16,
+        "title": "9. SỰ TÍCH CHIM ĐA ĐA",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-16",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 18,
+        "number": 17,
+        "title": "10. SỰ TÍCH CON NHÁI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-17",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 19,
+        "number": 18,
+        "title": "11. SỰ TÍCH CON MUỖI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-18",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 20,
+        "number": 19,
+        "title": "12. SỰ TÍCH CON KHỈ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-19",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 21,
+        "number": 20,
+        "title": "13. SỰ TÍCH CÁ HE",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-20",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 22,
+        "number": 21,
+        "title": "14. SỰ TÍCH CON SAM",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-21",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 23,
+        "number": 22,
+        "title": "15. SỰ TÍCH CON DÃ TRÀNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-22",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 24,
+        "number": 23,
+        "title": "16. GỐC TÍCH BỘ LÔNG QUẠ VÀ BỘ LÔNG CÔNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-23",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 25,
+        "number": 24,
+        "title": "17. GỐC TÍCH TIẾNG KÊU CỦA VẠC, CỘC, DỦ DỈ, ĐA ĐA VÀ CHUỘT",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-24",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 26,
+        "number": 25,
+        "title": "18. GỐC TÍCH CÁI NỐT DƯỚI CỔ CON TRÂU",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-25",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 27,
+        "number": 26,
+        "title": "19. SỰ TÍCH CÁI CHÂN SAU CON CHÓ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-26",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 28,
+        "number": 27,
+        "title": "20. SỰ TÍCH CÁI CHỔI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-27",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 29,
+        "number": 28,
+        "title": "21. SỰ TÍCH ÔNG ĐẦU RAU",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-28",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 30,
+        "number": 29,
+        "title": "22. SỰ TÍCH ÔNG BÌNH VÔI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-29",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 31,
+        "number": 30,
+        "title": "23. SỰ TÍCH CÂY NÊU NGÀY TẾT",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-30",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 32,
+        "number": 31,
+        "title": "24. GỐC TÍCH BÁNH CHƯNG VÀ BÁNH DẦY",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-31",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 33,
+        "number": 32,
+        "title": "25. GỐC TÍCH RUỘNG THÁC ĐAO HAY LÀ TRUYỆN LÊ PHỤNG HIỂU",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-32",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 34,
+        "number": 33,
+        "title": "II. SỰ TÍCH ĐẤT NƯỚC VIỆT 26. SỰ TÍCH HỒ GƯƠM",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-33",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 35,
+        "number": 34,
+        "title": "27. SỰ TÍCH HỒ BA-BỂ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-34",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 36,
+        "number": 35,
+        "title": "28. SỰ TÍCH ĐẦM NHẤT-DẠ VÀ BÃI TỰ-NHIÊN",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-35",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 37,
+        "number": 36,
+        "title": "29. SỰ TÍCH ĐẦM MỰC",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-36",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 38,
+        "number": 37,
+        "title": "30. SỰ TÍCH SÔNG NHÀ-BÈ HAY LÀ TRUYỆN THỦ HUỒN",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-37",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 39,
+        "number": 38,
+        "title": "31. TẠI SAO SÔNG TÔ-LỊCH VÀ SÔNG THIÊN-PHÙ HẸP LẠI?",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-38",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 40,
+        "number": 39,
+        "title": "32. SỰ TÍCH ĐÁ VỌNG PHU",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-39",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 41,
+        "number": 40,
+        "title": "33. SỰ TÍCH ĐÁ BÀ-RẦU",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-40",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 42,
+        "number": 41,
+        "title": "34. SỰ TÍCH THÀNH LỒI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-41",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 43,
+        "number": 42,
+        "title": "35. SỰ TÍCH NÚI NGŨ-HÀNH",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-42",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 44,
+        "number": 43,
+        "title": "III. SỰ TÍCH CÁC CÂU VÍ 36. THẠCH SÙNG CÒN THIẾU MẺ KHO HAY LÀ SỰ TÍCH CON MỐI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-43",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 45,
+        "number": 44,
+        "title": "37. BÒ BÉO BÒ GẦY",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-44",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 46,
+        "number": 45,
+        "title": "38. NỮ HÀNH GIÀNH BẠC",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-45",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 47,
+        "number": 46,
+        "title": "39. LẨY BẨY NHƯ CAO BIỀN DẬY NON",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-46",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 48,
+        "number": 47,
+        "title": "40. BỤNG LÀM DẠ CHỊU HAY LÀ TRUYỆN THẦY HÍT",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-47",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 49,
+        "number": 48,
+        "title": "NGUYỄN ĐỔNG CHI - TRÉSOR DES CONTES VIETNAMIENS",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-48",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 50,
+        "number": 49,
+        "title": "TẬP II",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-49",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 51,
+        "number": 50,
+        "title": "III. CÁC TÍCH CÁC CÂU VÍ 41. ĐỒNG TIỀN VẠN LỊCH",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-50",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 52,
+        "number": 51,
+        "title": "42. CỦA THIÊN TRẢ ĐỊA",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-51",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 53,
+        "number": 52,
+        "title": "43. NỢ TÌNH CHƯA TRẢ CHO AI, KHỐI TÌNH MANG XUỐNG TUYỀN ĐÀI CHƯA TAN",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-52",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 54,
+        "number": 53,
+        "title": "44. NỢ NHƯ CHÚA CHỔM",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-53",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 55,
+        "number": 54,
+        "title": "45. HỒN TRƯƠNG BA, DA HÀNG THỊT",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-54",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 56,
+        "number": 55,
+        "title": "46. SINH CON RỒI MỚI SINH CHA SINH CHÁU GIỮ NHÀ RỒI MỚI SINH ÔNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-55",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 57,
+        "number": 56,
+        "title": "47. CON VỢ KHÔN LẤY THẰNG CHỒNG DẠI NHƯ BÔNG HOA LÀI CẮM BÃI CỨT TRÂU",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-56",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 58,
+        "number": 57,
+        "title": "48. CỨU VẬT VẬT TRẢ ÂN CỨU NHÂN NHÂN TRẢ OÁN",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-57",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 59,
+        "number": 58,
+        "title": "49. ĐỨA CON TRỜI ĐÁNH HAY LÀ TRUYỆN TIẾC GÀ CHÔN MẸ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-58",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 60,
+        "number": 59,
+        "title": "[50]. GIẾT CHÓ KHUYÊN CHỒNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-59",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 61,
+        "number": 60,
+        "title": "51. CHA MẸ NUÔI CON BỂ HỒ LAI LÁNG CON NUÔI CHA MẸ KỂ THÁNG KỂ NGÀY",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-60",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 62,
+        "number": 61,
+        "title": "52. CHƯA ĐỖ ÔNG NGHÈ ĐÃ ĐE HÀNG TỔNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-61",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 63,
+        "number": 62,
+        "title": "53. DÌ PHẢI THẰNG CHẾT TRÔI, TÔI PHẢI ĐÔI SẤU SÀNH",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-62",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 64,
+        "number": 63,
+        "title": "54. CÁI KIẾN MÀY KIỆN CỦ KHOAI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-63",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 65,
+        "number": 64,
+        "title": "55. VẬN KHỨ HOÀI SƠN NĂNG TRÍ TỬ, THỜI LAI BẠCH THỦY KHẢ THÔI SINH",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-64",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 66,
+        "number": 65,
+        "title": "56. TRINH PHỤ HAI CHỒNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-65",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 67,
+        "number": 66,
+        "title": "57. KIỆN NGÀNH ĐA",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-66",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 68,
+        "number": 67,
+        "title": "58. TO ĐẦU MÀ DẠI, NHỎ DÁI MÀ KHÔN",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-67",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 69,
+        "number": 68,
+        "title": "59. NHÂN THAM TÀI NHI TỬ, ĐIỂU THAM THỰC NHI VONG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-68",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 70,
+        "number": 69,
+        "title": "60. NÓI DỐI NHƯ CUỘI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-69",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 71,
+        "number": 70,
+        "title": "61. CỦA TRỜI TRỜI LẠI LẤY ĐI GIƯƠNG ĐÔI MẮT ẾCH LÀM CHI ĐƯỢC TRỜI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-70",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 72,
+        "number": 71,
+        "title": "IV. THÔNG MINH TÀI TRÍ VÀ SỨC KHỎE 62. HAI ÔNG TƯỚNG ĐÁ RÃI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-71",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 73,
+        "number": 72,
+        "title": "63. LÊ NHƯ HỔ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-72",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 74,
+        "number": 73,
+        "title": "64. CHÀNG LÍA",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-73",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 75,
+        "number": 74,
+        "title": "65. ANH EM SINH NĂM",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-74",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 76,
+        "number": 75,
+        "title": "66. BỐN ANH TÀI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-75",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 77,
+        "number": 76,
+        "title": "67. KHỔNG LỒ ĐÚC CHUÔNG HAY LÀ SỰ TÍCH TRÂU VÀNG HỒ TÂY",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-76",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 78,
+        "number": 77,
+        "title": "68. THẠCH SANH",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-77",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 79,
+        "number": 78,
+        "title": "69. ĐẠI VƯƠNG HAI HAY LÀ TRUYỆN GIẾT THUỒNG LUỒNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-78",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 80,
+        "number": 79,
+        "title": "70. ÔNG Ồ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-79",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 81,
+        "number": 80,
+        "title": "71. ÂM DƯƠNG GIAO CHIẾN",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-80",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 82,
+        "number": 81,
+        "title": "72. YẾT KIÊU",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-81",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 83,
+        "number": 82,
+        "title": "73. LÝ ÔNG TRỌNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-82",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 84,
+        "number": 83,
+        "title": "74. BẢY GIAO, CHÍN QUỲ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-83",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 85,
+        "number": 84,
+        "title": "75. NGƯỜI Ả ĐÀO VỚI GIẶC MINH",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-84",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 86,
+        "number": 85,
+        "title": "76. BỢM LẠI GẶP BỢM",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-85",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 87,
+        "number": 86,
+        "title": "77. QUẬN GIÓ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-86",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 88,
+        "number": 87,
+        "title": "78. CON MỐI LÀM CHỨNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-87",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 89,
+        "number": 88,
+        "title": "79. BÙI CẦM HỔ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-88",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 90,
+        "number": 89,
+        "title": "80. EM BÉ THÔNG MINH",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-89",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 91,
+        "number": 90,
+        "title": "81. TRẠNG HIỀN",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-90",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 92,
+        "number": 91,
+        "title": "82. THẦN GIỮ CỦA",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-91",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 93,
+        "number": 92,
+        "title": "83. KẺ TRỘM DẠY HỌC TRÒ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-92",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 94,
+        "number": 93,
+        "title": "84. CON MỤ LƯỜNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-93",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 95,
+        "number": 94,
+        "title": "85. CON SÁO VÀ PHÚ TRƯỞNG GIẢ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-94",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 96,
+        "number": 95,
+        "title": "86. CON THỎ,",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-95",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 97,
+        "number": 96,
+        "title": "87. CON THỎ VÀ CON HỔ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-96",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 98,
+        "number": 97,
+        "title": "88. MƯU CON THỎ",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-97",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 99,
+        "number": 98,
+        "title": "89. BỢM GIÀ MẮC BẪY",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-98",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 100,
+        "number": 99,
+        "title": "90. GÁI NGOAN DẠY CHỒNG",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-99",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 101,
+        "number": 100,
+        "title": "91. BÀ LỚN ĐƯỜI ƯƠI",
+        "url": "https://vietnamthuquan.eu/TacPham/kho-tang-truyen-co-tich-12693/chuong-100",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready"
+  }
 }
