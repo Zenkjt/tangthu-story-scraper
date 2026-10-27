@@ -7,7 +7,7 @@ import re
 from datetime import datetime, timezone
 from html import unescape
 from pathlib import Path
-from urllib.parse import quote, urljoin
+from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
 from story_scraper.application import build_application
@@ -47,9 +47,7 @@ def gh_get(path: str) -> dict:
 def github_put(path: str, payload: dict, message: str) -> None:
     github_put_bytes(
         path,
-        (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode(
-            "utf-8"
-        ),
+        (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8"),
         message,
     )
 
@@ -103,17 +101,32 @@ def normalize_url(value: str) -> str:
 
 def find_registered_toc_index(story: Story, source_url: str) -> int:
     requested = normalize_url(source_url)
+
+    # A chapter URL identifies one exact TOC entry.
     matches = [
         entry.toc_index
         for entry in story.chapters
         if normalize_url(entry.url) == requested
     ]
-    if len(matches) != 1:
-        raise RuntimeError(
-            "Không xác định được chính xác vị trí đăng ký trong TOC "
-            f"từ URL: {source_url}"
-        )
-    return matches[0]
+    if len(matches) == 1:
+        return matches[0]
+
+    # A story URL has no chapter URL to match. Use the adapter-resolved
+    # initial target (normally TOC 1 for a story-level registration).
+    story_urls = {
+        normalize_url(story.source_url),
+        normalize_url(story.index_url),
+    }
+    if requested in story_urls:
+        if story.target_toc_index is not None:
+            return story.target_toc_index
+        if story.chapters:
+            return story.chapters[0].toc_index
+
+    raise RuntimeError(
+        "Không xác định được chính xác vị trí đăng ký trong TOC "
+        f"từ URL: {source_url}"
+    )
 
 
 def cover_cache_dir(user_id: str, story_id: str) -> str:
@@ -146,9 +159,7 @@ def story_view(
         "target_toc_index": story.target_toc_index,
         "registered_toc_index": story.registered_toc_index,
         "current_chapter": current,
-        "current_chapter_title": (
-            current_entry.title if current_entry else None
-        ),
+        "current_chapter_title": current_entry.title if current_entry else None,
         "total_toc_entries": len(entries),
         "total_chapters": len(entries),
         "chapters": [
@@ -451,7 +462,11 @@ def find_entry_by_identity(story: Story, identity):
     if identity is None:
         return None
     return next(
-        (entry for entry in story.chapters if entry_identity(entry) == identity),
+        (
+            entry
+            for entry in story.chapters
+            if entry_identity(entry) == identity
+        ),
         None,
     )
 
@@ -612,11 +627,6 @@ def main() -> int:
             )
             after = toc_signature(story)
 
-            # Jump fetches the requested TOC entry immediately. trigger_next()
-            # normally advances the target to the following entry after a
-            # complete fetch, so restore the fetched entry as the current
-            # position for the GUI and subsequent navigation. Resolve it by
-            # stable identity because a tail refresh may renumber the TOC.
             fetched_entry = find_entry_by_identity(
                 story, requested_identity
             )
