@@ -89,6 +89,7 @@ class Story:
     target_toc_index: int | None = None
     registered_toc_index: int | None = None
     index_url: str | None = None
+    cover_url: str | None = None
 
     def normalize_toc(self) -> None:
         """Assign stable 1-based TOC positions without using source chapter numbers."""
@@ -136,6 +137,7 @@ class Story:
             "target_toc_index": self.target_toc_index,
             "registered_toc_index": self.registered_toc_index,
             "index_url": self.index_url,
+            "cover_url": self.cover_url,
             # Keep old field so older UI/cache readers do not break.
             "target_chapter_number": self.target_chapter_number,
         }
@@ -156,6 +158,7 @@ class Story:
             None,
             int(data["registered_toc_index"]) if data.get("registered_toc_index") is not None else None,
             data.get("index_url"),
+            data.get("cover_url"),
         )
         story.normalize_toc()
 
