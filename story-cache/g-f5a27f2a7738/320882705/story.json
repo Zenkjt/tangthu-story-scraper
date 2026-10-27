@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "story_id": "320882705",
+  "source_url": "https://www.wattpad.com/1264858434-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+  "site": "wattpad",
+  "title": "Đêm Trắng - Fyodor Mikhailovich Dostoevsky",
+  "author": "404 Name Not Found",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "ĐÊM THỨ NHẤT",
+      "url": "https://www.wattpad.com/1264858434-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+      "status": "complete",
+      "content_hash": "aa6ccecd373d8a1151ee3e5852ed38227dce06164605d99029c0f151e2187a56",
+      "external_id": "1264858434",
+      "toc_index": 1,
+      "kind": "chapter"
+    },
+    {
+      "number": 2,
+      "title": "ĐÊM THỨ HAI",
+      "url": "https://www.wattpad.com/1264859753-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+      "status": "pending",
+      "content_hash": null,
+      "external_id": "1264859753",
+      "toc_index": 2,
+      "kind": "chapter"
+    },
+    {
+      "number": 3,
+      "title": "ĐÊM THỨ BA",
+      "url": "https://www.wattpad.com/1264862439-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+      "status": "pending",
+      "content_hash": null,
+      "external_id": "1264862439",
+      "toc_index": 3,
+      "kind": "chapter"
+    },
+    {
+      "number": 4,
+      "title": "ĐÊM THỨ TƯ",
+      "url": "https://www.wattpad.com/1264863162-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-%C4%91%C3%AAm-th%E1%BB%A9",
+      "status": "pending",
+      "content_hash": null,
+      "external_id": "1264863162",
+      "toc_index": 4,
+      "kind": "chapter"
+    },
+    {
+      "number": 5,
+      "title": "BUỔI SÁNG",
+      "url": "https://www.wattpad.com/1264864133-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky-bu%E1%BB%95i-s%C3%A1ng",
+      "status": "pending",
+      "content_hash": null,
+      "external_id": "1264864133",
+      "toc_index": 5,
+      "kind": "chapter"
+    }
+  ],
+  "target_toc_index": 2,
+  "registered_toc_index": 1,
+  "index_url": "https://www.wattpad.com/story/320882705-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky",
+  "target_chapter_number": 2
+}
