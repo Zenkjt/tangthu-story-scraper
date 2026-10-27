@@ -66,13 +66,28 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
         return sorted(unique, key=lambda item: item[0])
 
     def _discover_cover_url(self, soup, base_url: str, title: str) -> str | None:
-        """Discover the story cover from HTML without hard-coding a URL."""
-        cover = soup.find("img", id="vntqCoverImg")
-        if cover:
-            for attr in ("src", "data-src", "data-original", "data-lazy-src"):
-                value = cover.get(attr)
-                if value and not value.startswith("data:"):
-                    return self.absolute_url(base_url, value)
+        """Discover cover by generic HTML heuristics, without domain hard-coding."""
+        for selector, attr in (
+            ('meta[property="og:image"]', "content"),
+            ('meta[name="twitter:image"]', "content"),
+            ('meta[name="twitter:image:src"]', "content"),
+        ):
+            node = soup.select_one(selector)
+            value = node.get(attr) if node else None
+            if value and not value.startswith("data:"):
+                return self.absolute_url(base_url, value)
+
+        cover_words = ("cover", "book-cover", "bookcover", "bia")
+        for image in soup.find_all("img"):
+            marker = " ".join(
+                str(image.get(attr, ""))
+                for attr in ("id", "class", "title", "alt")
+            ).casefold()
+            if any(word in marker for word in cover_words):
+                for attr in ("src", "data-src", "data-original", "data-lazy-src"):
+                    value = image.get(attr)
+                    if value and not value.startswith("data:"):
+                        return self.absolute_url(base_url, value)
 
         normalized_title = self.clean_text(title).casefold()
         if normalized_title:
@@ -86,67 +101,10 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
 
         return None
 
-    def _debug_cover_candidates(self, soup, base_url: str) -> None:
-        """Diagnostic only: inspect possible cover-image locations."""
-        print("Cover debug: inspecting story-page image candidates...")
-
-        images = soup.find_all("img")
-        print(f"Cover debug: total <img> candidates={len(images)}")
-
-        for index, image in enumerate(images, start=1):
-            attrs = {}
-            for attr in (
-                "src", "data-src", "data-original", "data-lazy-src",
-                "srcset", "data-srcset", "alt", "class", "id", "title"
-            ):
-                value = image.get(attr)
-                if value:
-                    attrs[attr] = " ".join(value) if isinstance(value, list) else value
-
-            urls = []
-            for attr in ("src", "data-src", "data-original", "data-lazy-src"):
-                value = image.get(attr)
-                if value and not value.startswith("data:"):
-                    urls.append(self.absolute_url(base_url, value))
-
-            print(f"Cover debug: img[{index}] urls={urls!r} attrs={attrs!r}")
-
-        links = soup.find_all("a", href=True)
-        print(f"Cover debug: total <a href> candidates={len(links)}")
-
-        for index, link in enumerate(links, start=1):
-            href = link.get("href", "").strip()
-            if not href:
-                continue
-            absolute = self.absolute_url(base_url, href)
-            if re.search(r"\.(?:jpg|jpeg|png|webp|gif)(?:[?#].*)?$", absolute, re.I):
-                print(
-                    f"Cover debug: link[{index}] image_href={absolute!r} "
-                    f"text={self.clean_text(link)!r} "
-                    f"title={link.get('title', '')!r} "
-                    f"style={link.get('style', '')!r}"
-                )
-
-        print("Cover debug: inspecting style attributes containing image URLs...")
-        for index, node in enumerate(soup.find_all(style=True), start=1):
-            style = node.get("style", "")
-            if re.search(
-                r'''url\s*\(\s*['"]?[^'")]+\.(?:jpg|jpeg|png|webp|gif)''',
-                style,
-                re.I,
-            ):
-                print(
-                    f"Cover debug: style[{index}] "
-                    f"tag={node.name!r} style={style!r}"
-                )
-
     def build_index(self, url: str) -> Story:
         story_url = self._story_url(url)
         html = self.fetch_html(story_url)
         soup = self.soup(html)
-
-        # Diagnostic only: cover selection is intentionally not changed yet.
-        self._debug_cover_candidates(soup, story_url)
 
         title_node = soup.find("h1")
         title = self.clean_text(title_node)
