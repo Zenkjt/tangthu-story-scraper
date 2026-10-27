@@ -5,7 +5,7 @@ from typing import Type
 
 from .adapter import AdapterNotApplicable, SiteAdapter
 from .models import Story
-from .resolution import AdapterResolutionStore, classify_resolution_failure, resolution_domain
+from .resolution import AdapterResolutionStore, resolution_domain
 
 
 @dataclass(frozen=True)
@@ -25,9 +25,8 @@ class ResolvedStorySource:
 class AdapterRegistry:
     """Resolve URLs by trying adapters in priority order.
 
-    A domain is only recorded as unsupported after every registered adapter
-    rejects the URL with AdapterNotApplicable. Real adapter errors stop the
-    resolution immediately; they are not silently treated as fallback.
+    Only AdapterNotApplicable permits fallback. Real adapter errors propagate
+    and are never recorded as an unsupported-domain resolution.
     """
 
     def __init__(self, adapters=None, resolution_store: AdapterResolutionStore | None = None):
@@ -41,7 +40,6 @@ class AdapterRegistry:
             self._adapters.append(adapter)
 
     def registered_adapters(self) -> tuple[Type[SiteAdapter], ...]:
-        """Return registered adapter classes; no domain list is required."""
         return tuple(self._adapters)
 
     def registered_adapter_names(self) -> list[str]:
@@ -53,12 +51,6 @@ class AdapterRegistry:
         return bool(probe(url)) if probe is not None else bool(adapter.matches(url))
 
     def candidates(self, url: str) -> list[AdapterCandidate]:
-        """Return all adapters, matching adapters first, then fallbacks.
-
-        For an unknown domain there may be no match at all. In that case the
-        complete adapter chain is still returned, so the first exact adapter
-        (VnThuQuan by priority) gets a chance before the generic fallback.
-        """
         candidates = [
             AdapterCandidate(
                 adapter=a,
@@ -68,14 +60,7 @@ class AdapterRegistry:
             )
             for a in self._adapters
         ]
-
-        # For unknown domains, priority is the discovery order. This is
-        # intentional: VnThuQuan is an exact/static adapter with higher
-        # priority than the generic StaticHTMLFamilyAdapter, so it gets the
-        # first chance even when its domain is not known yet.
-        candidates.sort(
-            key=lambda c: (-c.priority, c.family, c.adapter.name)
-        )
+        candidates.sort(key=lambda c: (-c.priority, c.family, c.adapter.name))
 
         if self.resolution_store is not None:
             cached = self.resolution_store.latest_success(resolution_domain(url))
@@ -104,7 +89,6 @@ class AdapterRegistry:
         return self._resolve_source(url, bypass_failure_cache=False)
 
     def recheck_source(self, url: str) -> ResolvedStorySource:
-        """Maintenance-only resolution that bypasses the active failure cache."""
         return self._resolve_source(url, bypass_failure_cache=True)
 
     def _resolve_source(self, url: str, bypass_failure_cache: bool) -> ResolvedStorySource:
@@ -117,10 +101,8 @@ class AdapterRegistry:
                     f"Known unsupported domain: {domain} ({coverage.reason})"
                 )
 
-        candidates = self.candidates(url)
         rejected = []
-
-        for candidate in candidates:
+        for candidate in self.candidates(url):
             adapter = candidate.adapter()
             try:
                 story = adapter.build_index(url)
@@ -143,15 +125,9 @@ class AdapterRegistry:
                         url=url,
                     )
                 rejected.append(f"{candidate.adapter.name}: {exc}")
-            except Exception as exc:
-                if self.resolution_store is not None:
-                    self.resolution_store.record(
-                        domain,
-                        candidate.adapter.name,
-                        "failure",
-                        classify_resolution_failure(exc),
-                        url=url,
-                    )
+            except Exception:
+                # A real network/HTTP/parser/adapter error is not evidence that
+                # the domain is unsupported. Preserve the error for the caller.
                 raise
 
         if self.resolution_store is not None:
@@ -162,6 +138,7 @@ class AdapterRegistry:
                 "UNSUPPORTED_STRUCTURE",
                 url=url,
             )
+
         raise AdapterNotApplicable(
             f"No registered adapter accepted URL: {url} ({'; '.join(rejected)})"
         )
