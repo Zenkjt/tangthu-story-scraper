@@ -20,8 +20,8 @@
       "number": 1,
       "title": "Chương 1",
       "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-1/",
-      "status": "complete",
-      "content_hash": "5b4bd4bd4cf379cdcdf94f822aec1f0374073eafe4db7c46bb7c451b55a7a7c9",
+      "status": "pending",
+      "content_hash": null,
       "external_id": null,
       "toc_index": 2,
       "kind": "chapter"
@@ -150,8 +150,8 @@
       "number": 14,
       "title": "Chương 14",
       "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-14/",
-      "status": "complete",
-      "content_hash": "a627fbee26b0bd75ef03b617dde0dbb27b52a92983f5baa98d9bdd6cea74e4fe",
+      "status": "pending",
+      "content_hash": null,
       "external_id": null,
       "toc_index": 15,
       "kind": "chapter"
@@ -200,8 +200,8 @@
       "number": 19,
       "title": "Chương 19",
       "url": "https://truyenfull.live/bi-mat-cua-emma/chuong-19/",
-      "status": "complete",
-      "content_hash": "bd58b9a28dd5032ceb2332f03051e4fe2b5d221951f5fc6d4f20aa9ecc8a72e0",
+      "status": "pending",
+      "content_hash": null,
       "external_id": null,
       "toc_index": 20,
       "kind": "chapter"
@@ -287,9 +287,11 @@
       "kind": "chapter"
     }
   ],
-  "target_toc_index": 21,
+  "target_toc_index": 2,
   "registered_toc_index": 1,
+  "current_toc_index": 1,
   "index_url": "https://truyenfull.live/bi-mat-cua-emma/",
-  "target_chapter_number": 20,
+  "cover_url": null,
+  "target_chapter_number": 1,
   "cover_ext": ".jpg"
 }
