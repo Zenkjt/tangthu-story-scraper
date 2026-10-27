@@ -88,6 +88,7 @@ class Story:
     chapters: list[Chapter] = field(default_factory=list)
     target_toc_index: int | None = None
     registered_toc_index: int | None = None
+    current_toc_index: int | None = None
     index_url: str | None = None
     cover_url: str | None = None
 
@@ -107,6 +108,10 @@ class Story:
     @property
     def target_entry(self) -> Chapter | None:
         return self.entry_at(self.target_toc_index)
+
+    @property
+    def current_entry(self) -> Chapter | None:
+        return self.entry_at(self.current_toc_index)
 
     # Backward-compatible read/write bridge for old cache/UI data.
     @property
@@ -136,6 +141,7 @@ class Story:
             "chapters": [c.as_dict() for c in self.chapters],
             "target_toc_index": self.target_toc_index,
             "registered_toc_index": self.registered_toc_index,
+            "current_toc_index": self.current_toc_index,
             "index_url": self.index_url,
             "cover_url": self.cover_url,
             # Keep old field so older UI/cache readers do not break.
@@ -157,6 +163,7 @@ class Story:
             chapters,
             None,
             int(data["registered_toc_index"]) if data.get("registered_toc_index") is not None else None,
+            int(data["current_toc_index"]) if data.get("current_toc_index") is not None else None,
             data.get("index_url"),
             data.get("cover_url"),
         )
