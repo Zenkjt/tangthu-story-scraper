@@ -2,13 +2,358 @@
   "schema_version": 1,
   "request_id": "d6cdc759-14fc-47d9-b50f-f094f6a6c71c",
   "user_id": "g-f5a27f2a7738",
-  "story_id": null,
+  "story_id": "311848068",
   "folder_id": "1hR0H-wZejPM59ka-340atSlJCCYaaUbs",
   "action": "register",
   "url": "https://www.wattpad.com/story/311848068-anh-em-nh%C3%A0-karamazov-f-dostoievsky",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "completed",
+  "message": "Đăng ký truyện thành công.",
   "created_at": "2026-10-27T03:09:01.624Z",
-  "updated_at": "2026-10-27T03:09:17.159064+00:00"
+  "updated_at": "2026-10-27T03:09:29.650243+00:00",
+  "story": {
+    "story_id": "311848068",
+    "title": "Anh em nhà Karamazov - F. Dostoievsky",
+    "author": "404 Name Not Found",
+    "site": "wattpad",
+    "source_url": "https://www.wattpad.com/story/311848068-anh-em-nh%C3%A0-karamazov-f-dostoievsky",
+    "current_toc_index": 2,
+    "target_toc_index": 2,
+    "registered_toc_index": 1,
+    "current_chapter": 2,
+    "current_chapter_title": "Quyển 1: Câu chuyện một gia đình - Chương 1",
+    "total_toc_entries": 41,
+    "total_chapters": 41,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 1,
+        "title": "Lời tác giả",
+        "url": "https://www.wattpad.com/1229978341-anh-em-nh%C3%A0-karamazov-f-dostoievsky-l%E1%BB%9Di-t%C3%A1c-gi%E1%BA%A3",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 2,
+        "title": "Quyển 1: Câu chuyện một gia đình - Chương 1",
+        "url": "https://www.wattpad.com/1229978609-anh-em-nh%C3%A0-karamazov-f-dostoievsky-quy%E1%BB%83n-1-c%C3%A2u",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 3,
+        "number": 3,
+        "title": "Chương 2: Tống khứ đứa con đầu lòng",
+        "url": "https://www.wattpad.com/1229979549-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-2-t%E1%BB%91ng",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 4,
+        "number": 4,
+        "title": "Chương 3: Cuộc hôn nhân thứ hai và các con thú\r",
+        "url": "https://www.wattpad.com/1229979875-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-3-cu%E1%BB%99c",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 5,
+        "number": 5,
+        "title": "Chương 4\rĐứa con trai thứ ba: Aliosa(1)",
+        "url": "https://www.wattpad.com/1229980186-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-4%0D%C4%91%E1%BB%A9a",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 6,
+        "number": 6,
+        "title": "Chương 5 Các trưởng lão",
+        "url": "https://www.wattpad.com/1229980652-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-5-c%C3%A1c",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 7,
+        "number": 7,
+        "title": "Quyển 2: Cuộc họp mặt không đúng chỗ - Chương 1 Đến tu viện\r\r",
+        "url": "https://www.wattpad.com/1229981065-anh-em-nh%C3%A0-karamazov-f-dostoievsky-quy%E1%BB%83n-2-cu%E1%BB%99c",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 8,
+        "number": 8,
+        "title": "Chương 2 Tên hề già\r",
+        "url": "https://www.wattpad.com/1229981419-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-2-t%C3%AAn-h%E1%BB%81",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 9,
+        "number": 9,
+        "title": "Chương 3\rNhững người đàn bà sùng tín",
+        "url": "https://www.wattpad.com/1229983970-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-3%0Dnh%E1%BB%AFng",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 10,
+        "number": 10,
+        "title": "Chương 4\rMột bà kém đức tin\r",
+        "url": "https://www.wattpad.com/1229984398-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-4%0Dm%E1%BB%99t-b%C3%A0",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 11,
+        "number": 11,
+        "title": "Chương 5\rXin được như nguyện, Amen!\r",
+        "url": "https://www.wattpad.com/1229984804-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-5%0Dxin",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 12,
+        "number": 12,
+        "title": "Chương 6\r\rTại sao trên đời lại có một người như thế!",
+        "url": "https://www.wattpad.com/1229985324-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-6%0D%0Dt%E1%BA%A1i",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 13,
+        "number": 13,
+        "title": "Chương 7\rGã chủng sinh hám danh lợi",
+        "url": "https://www.wattpad.com/1229985855-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-7%0Dg%C3%A3",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 14,
+        "number": 14,
+        "title": "Chương 8\rVụ tai tiếng\r",
+        "url": "https://www.wattpad.com/1229986329-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-8%0Dv%E1%BB%A5-tai",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 15,
+        "number": 15,
+        "title": "Quyển 3: Những kẻ ham nhục dục - Chương 1 Trong căn nhà gia nhân",
+        "url": "https://www.wattpad.com/1229986745-anh-em-nh%C3%A0-karamazov-f-dostoievsky-quy%E1%BB%83n-3-nh%E1%BB%AFng",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 16,
+        "number": 16,
+        "title": "Chương 2\rLizaveta Xmerdiasaia",
+        "url": "https://www.wattpad.com/1229988585-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 17,
+        "number": 17,
+        "title": "Chương 3\r \rLời xưng tội của một trái tim nồng nhiệt: qua những vần thơ",
+        "url": "https://www.wattpad.com/1229988856-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-3%0D-%0Dl%E1%BB%9Di",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 18,
+        "number": 18,
+        "title": "Chương 4",
+        "url": "https://www.wattpad.com/1229989283-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-4",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 19,
+        "number": 19,
+        "title": "Chương 5\rLời xưng tội của một trái tim nồng nhiệt \"ngã lộn đầu\"",
+        "url": "https://www.wattpad.com/1229989601-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-5%0Dl%E1%BB%9Di",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 20,
+        "number": 20,
+        "title": "Chương 6\rXmerdiakov\r",
+        "url": "https://www.wattpad.com/1229989964-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 21,
+        "number": 21,
+        "title": "Chương 7\r\rCuộc tranh luận",
+        "url": "https://www.wattpad.com/1229990349-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-7%0D%0Dcu%E1%BB%99c",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 22,
+        "number": 22,
+        "title": "Chương 8",
+        "url": "https://www.wattpad.com/1229990662-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-8",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 23,
+        "number": 23,
+        "title": "Chương 9\rNhững kẻ ham nhục dục\r",
+        "url": "https://www.wattpad.com/1229990990-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-9%0Dnh%E1%BB%AFng",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 24,
+        "number": 24,
+        "title": "Chương 10\rHai người với nhau",
+        "url": "https://www.wattpad.com/1229991342-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-10%0Dhai",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 25,
+        "number": 25,
+        "title": "Chương 11\rLại một thanh danh nữa tiêu ma\r",
+        "url": "https://www.wattpad.com/1229991853-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-11%0Dl%E1%BA%A1i",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 26,
+        "number": 26,
+        "title": "Quyển 4: Vò xé - Chương 1 Cha Ferapont",
+        "url": "https://www.wattpad.com/1229992257-anh-em-nh%C3%A0-karamazov-f-dostoievsky-quy%E1%BB%83n-4-v%C3%B2-x%C3%A9",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 27,
+        "number": 27,
+        "title": "Chương 2",
+        "url": "https://www.wattpad.com/1229992874-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-2",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 28,
+        "number": 28,
+        "title": "Chương 3\rBắt quen với bọn học trò\r\r",
+        "url": "https://www.wattpad.com/1230042603-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-3%0Db%E1%BA%AFt",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 29,
+        "number": 29,
+        "title": "Chương 4\rỞ nhà bà Khokhlakova\r\r",
+        "url": "https://www.wattpad.com/1230042789-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-4%0D%E1%BB%9F-nh%C3%A0",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 30,
+        "number": 30,
+        "title": "Chương 5\rNỗi vò xé trong phòng khách",
+        "url": "https://www.wattpad.com/1230043046-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-5%0Dn%E1%BB%97i-v%C3%B2",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 31,
+        "number": 31,
+        "title": "Chương 6\rNỗi vò xé trong gian nhà lụp xụp",
+        "url": "https://www.wattpad.com/1230043463-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-6%0Dn%E1%BB%97i-v%C3%B2",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 32,
+        "number": 32,
+        "title": "Chương 7\rNgoài trời thoáng đăng",
+        "url": "https://www.wattpad.com/1230043798-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-7%0Dngo%C3%A0i",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 33,
+        "number": 33,
+        "title": "Quyển 5: Pro và Contra(1) - Chương 1 Đính ước",
+        "url": "https://www.wattpad.com/1230044126-anh-em-nh%C3%A0-karamazov-f-dostoievsky-quy%E1%BB%83n-5-pro-v%C3%A0",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 34,
+        "number": 34,
+        "title": "Chương 2\r\rXmerdiakov với cây đàn ghi ta",
+        "url": "https://www.wattpad.com/1230044433-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 35,
+        "number": 35,
+        "title": "Chương 3\rAnh em làm quen với nhau",
+        "url": "https://www.wattpad.com/1230044698-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-3%0Danh-em",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 36,
+        "number": 36,
+        "title": "Chương 4\rNổi loạn",
+        "url": "https://www.wattpad.com/1230045215-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-4%0Dn%E1%BB%95i",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 37,
+        "number": 37,
+        "title": "Chương 5\rViên đại pháp quan tôn giáo\r",
+        "url": "https://www.wattpad.com/1230045689-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-5%0Dvi%C3%AAn",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 38,
+        "number": 38,
+        "title": "Chương 6   Vẫn còn rất mơ hồ ",
+        "url": "https://www.wattpad.com/1230046327-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-6-v%E1%BA%ABn",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 39,
+        "number": 39,
+        "title": "Chương 7\r\"Nói chuyện với người thông minh đến là thú vị\"",
+        "url": "https://www.wattpad.com/1230046707-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-7%0D-n%C3%B3i",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 40,
+        "number": 40,
+        "title": "Quyển 6. - Chương 1\rMột thầy tu Nga - Trưởng lão Zoxima và các vị khách của cha",
+        "url": "https://www.wattpad.com/1230047116-anh-em-nh%C3%A0-karamazov-f-dostoievsky-quy%E1%BB%83n-6-ch%C6%B0%C6%A1ng",
+        "kind": "chapter",
+        "status": "pending"
+      },
+      {
+        "toc_index": 41,
+        "number": 41,
+        "title": "Chương 2\rTruyện trưởng lão Zoxima tạ thế trong Chúa",
+        "url": "https://www.wattpad.com/1230047654-anh-em-nh%C3%A0-karamazov-f-dostoievsky-ch%C6%B0%C6%A1ng-2%0Dtruy%E1%BB%87n",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready"
+  }
 }
