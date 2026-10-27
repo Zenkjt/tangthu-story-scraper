@@ -169,6 +169,7 @@ class StoryApplication:
             if state_story.registered_toc_index is not None
             else manifest_story.registered_toc_index
         )
+        manifest_story.current_toc_index = state_story.current_toc_index
         state_story.chapters = manifest_story.chapters
         state_story.normalize_toc()
         return state_story
