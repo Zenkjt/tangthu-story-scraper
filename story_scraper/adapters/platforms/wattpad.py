@@ -5,6 +5,7 @@ import re
 from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
 
+from ...core.adapter import AdapterNotApplicable
 from ...core.html_adapter import BaseStaticHTMLAdapter
 from ...core.models import Chapter, Story
 
@@ -12,6 +13,7 @@ from ...core.models import Chapter, Story
 class WattpadAdapter(BaseStaticHTMLAdapter):
     name = "wattpad"
     family = "api-story"
+    priority = 150
     hosts = {"wattpad.com", "www.wattpad.com"}
 
     API_BASE = "https://www.wattpad.com/api/v3"
@@ -73,11 +75,14 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
         )
 
     def fetch_story(self, source_url):
+        if not self.matches(source_url):
+            raise AdapterNotApplicable(f"Not a Wattpad URL: {source_url}")
+
         story_id, target_part_id = self.extract_ids(source_url)
 
         if story_id is None:
             if target_part_id is None:
-                raise ValueError(
+                raise AdapterNotApplicable(
                     f"Unsupported Wattpad URL: {source_url}"
                 )
 
@@ -133,9 +138,7 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
             title=data.get("title", ""),
             author=author,
             chapters=chapters,
-            target_toc_index=(
-                target.toc_index if target is not None else 1
-            ),
+            target_toc_index=(target.toc_index if target is not None else 1),
             registered_toc_index=(
                 target.toc_index if target is not None else None
             ),
@@ -174,10 +177,6 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
         if not chapter.external_id:
             raise ValueError("Wattpad chapter is missing external_id")
 
-        # Current Wattpad public downloader implementations use the v4
-        # part endpoint and its text_url instead of the legacy
-        # /apiv2/storytext endpoint. This preserves UTF-8 HTML for
-        # Vietnamese and other non-ASCII stories.
         try:
             part = self._fetch_part_v4(chapter.external_id)
             text_url = ((part.get("text_url") or {}).get("text") or "").strip()

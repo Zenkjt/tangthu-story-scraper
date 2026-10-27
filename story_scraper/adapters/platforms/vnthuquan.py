@@ -3,33 +3,36 @@ from __future__ import annotations
 import re
 from urllib.parse import urlparse
 
+from ...core.adapter import AdapterNotApplicable
 from ...core.html_adapter import BaseStaticHTMLAdapter
 from ...core.models import Chapter, ChapterContent, Story
 
 
 class VnThuQuanAdapter(BaseStaticHTMLAdapter):
-    """Configuration/thin adapter for vnthuquan's static HTML story pages."""
+    """Exact/static adapter for VnThuQuan-style story pages.
+
+    The path shape is the real applicability signal. The domain is deliberately
+    not hard-coded so a new mirror/domain can be discovered automatically.
+    """
 
     name = "vnthuquan"
     family = "static-html"
-    hosts = {"vnthuquan.net", "thuvien.vnthuquan.net"}
+    priority = 200
 
     _STORY_RE = re.compile(
-        r"^/TacPham/(?P<slug>[^/]+?-\\d+)(?:/chuong-(?P<chapter>\\d+))?/?$",
+        r"^/TacPham/(?P<slug>[^/]+?-\d+)(?:/chuong-(?P<chapter>\d+))?/?$",
         re.I,
     )
 
     @classmethod
     def matches(cls, url: str) -> bool:
-        return cls.host(url) in cls.hosts and bool(
-            cls._STORY_RE.match(urlparse(url).path)
-        )
+        return bool(cls._STORY_RE.match(urlparse(url).path))
 
     def _story_url(self, url: str) -> str:
         parsed = urlparse(url)
         match = self._STORY_RE.match(parsed.path)
         if not match:
-            raise ValueError(f"Unsupported vnthuquan URL: {url}")
+            raise AdapterNotApplicable(f"Unsupported VnThuQuan-style URL: {url}")
         return (
             f"{parsed.scheme or 'https'}://{parsed.netloc}"
             f"/TacPham/{match.group('slug')}/"
@@ -47,7 +50,7 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
             path = urlparse(href).path.rstrip("/")
             if not path.startswith(story_path + "/chuong-"):
                 continue
-            match = re.search(r"/chuong-(\\d+)$", path, re.I)
+            match = re.search(r"/chuong-(\d+)$", path, re.I)
             if not match:
                 continue
             number = int(match.group(1))
@@ -68,6 +71,8 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
         soup = self.soup(html)
         title_node = soup.find("h1")
         title = self.clean_text(title_node)
+        if not title:
+            raise AdapterNotApplicable("VnThuQuan-style page has no title")
 
         author = ""
         if title_node:
@@ -82,6 +87,10 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
             Chapter(number=number, title=chapter_title, url=chapter_url)
             for number, chapter_title, chapter_url in chapter_links
         ]
+        if not chapters:
+            raise AdapterNotApplicable(
+                "VnThuQuan-style page does not expose chapter links"
+            )
 
         story_id = self._STORY_RE.match(urlparse(story_url).path).group("slug")
         entries = [
