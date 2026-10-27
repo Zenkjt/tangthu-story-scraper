@@ -101,8 +101,6 @@ def normalize_url(value: str) -> str:
 
 def find_registered_toc_index(story: Story, source_url: str) -> int:
     requested = normalize_url(source_url)
-
-    # A chapter URL identifies one exact TOC entry.
     matches = [
         entry.toc_index
         for entry in story.chapters
@@ -111,8 +109,6 @@ def find_registered_toc_index(story: Story, source_url: str) -> int:
     if len(matches) == 1:
         return matches[0]
 
-    # A story URL has no chapter URL to match. Use the adapter-resolved
-    # initial target (normally TOC 1 for a story-level registration).
     story_urls = {
         normalize_url(story.source_url),
         normalize_url(story.index_url),
@@ -147,7 +143,7 @@ def story_view(
 ) -> dict:
     story.normalize_toc()
     entries = sorted(story.chapters, key=lambda c: c.toc_index)
-    current = story.target_toc_index
+    current = story.current_toc_index
     current_entry = story.entry_at(current)
     result = {
         "story_id": story.story_id,
@@ -508,9 +504,10 @@ def main() -> int:
         )
 
         if action == "register":
-            story = app.registry.resolve_source(
-                request["url"]
-            ).story
+            # Resolve once. The same adapter/story object is passed into
+            # initialize so registration does not build the source twice.
+            resolved_source = app.registry.resolve_source(request["url"])
+            story = resolved_source.story
             story.normalize_toc()
             registered_toc_index = find_registered_toc_index(
                 story, request["url"]
@@ -530,7 +527,11 @@ def main() -> int:
                 story_sink,
                 start_toc_index=registered_toc_index,
                 catalog=catalog,
+                resolved_source=resolved_source,
             )
+
+            # Registration is exactly one fetch. This also handles adapters
+            # such as Wattpad where the pasted URL points to a chapter.
             story = app.trigger_next(
                 user_id,
                 story.story_id,
@@ -634,9 +635,11 @@ def main() -> int:
                 raise RuntimeError(
                     f"Không còn tìm thấy vị trí TOC {toc_index} sau khi tải."
                 )
-            story = app.set_target(
-                user_id, story_id, fetched_entry.toc_index
-            )
+
+            # Do not call set_target() here. StoryEngine has already advanced
+            # target_toc_index to the next entry after a complete fetch.
+            # Resetting it here would make the next trigger download the same
+            # entry again.
 
             cache_story(user_id, story, cover_ext)
             set_current_story(user_id, story.story_id)
