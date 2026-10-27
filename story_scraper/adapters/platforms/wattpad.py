@@ -46,7 +46,7 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
         return None, None
 
     def fetch_initial_target_on_register(self, story: Story) -> bool:
-        """A pasted Wattpad chapter URL is also the first fetch target."""
+        # A pasted Wattpad chapter URL is also the first fetch target.
         _, target_part_id = self.extract_ids(story.source_url)
         return target_part_id is not None
 
@@ -120,12 +120,18 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
             None,
         )
 
+        user = data.get("user") or {}
+        author = str(user.get("name") or "").strip()
+        if author == "404 Name Not Found":
+            author = ""
+        author = author or str(user.get("username") or "").strip()
+
         story = Story(
             story_id=str(data["id"]),
             source_url=source_url,
             site=self.name,
             title=data.get("title", ""),
-            author=(data.get("user") or {}).get("name", ""),
+            author=author,
             chapters=chapters,
             target_toc_index=(
                 target.toc_index if target is not None else 1
