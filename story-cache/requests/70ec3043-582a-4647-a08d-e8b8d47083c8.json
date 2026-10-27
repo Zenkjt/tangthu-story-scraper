@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://www.wattpad.com/story/311848068-anh-em-nh%C3%A0-karamazov-f-dostoievsky",
   "chapter_number": null,
-  "status": "queued",
-  "message": "Đã xếp hàng xử lý.",
+  "status": "running",
+  "message": "Đang xử lý: register.",
   "created_at": "2026-10-27T05:32:32.435Z",
-  "updated_at": "2026-10-27T05:32:32.435Z"
+  "updated_at": "2026-10-27T05:32:47.336809+00:00"
 }
