@@ -76,6 +76,9 @@ class StoryEngine:
         entry.content_hash = new_hash
         entry.status = ChapterStatus.COMPLETE if complete else ChapterStatus.OPEN
 
+        # This is the entry actually written to 0neStory.epub.
+        story.current_toc_index = entry.toc_index
+
         if complete:
             story.target_toc_index = self._next_known_toc_index(
                 story, entry.toc_index
@@ -89,6 +92,10 @@ class StoryEngine:
         if entry.toc_index == self._last_known_toc_index(story):
             refreshed_changed = self._refresh_full_toc(story)
             catalog_changed = catalog_changed or refreshed_changed
+
+            current_after_refresh = self._find_identity(story, current_identity)
+            if current_after_refresh is not None:
+                story.current_toc_index = current_after_refresh.toc_index
 
             if complete:
                 story.target_toc_index = self._next_after_identity(
@@ -130,6 +137,7 @@ class StoryEngine:
         old_entries = list(story.chapters)
         old_target = story.entry_at(story.target_toc_index)
         old_registered = story.entry_at(story.registered_toc_index)
+        old_current = story.entry_at(story.current_toc_index)
 
         refreshed = self.adapter.refresh_index(story)
         incoming = list(refreshed.chapters)
@@ -178,6 +186,9 @@ class StoryEngine:
         story.target_toc_index = self._index_for_identity(story, old_target)
         story.registered_toc_index = self._index_for_identity(
             story, old_registered
+        )
+        story.current_toc_index = self._index_for_identity(
+            story, old_current
         )
 
         after = self._toc_signature(story)
