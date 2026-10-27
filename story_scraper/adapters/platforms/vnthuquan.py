@@ -110,7 +110,7 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
         for index, node in enumerate(soup.find_all(style=True), start=1):
             style = node.get("style", "")
             if re.search(
-                r"url\s*\(\s*['"]?[^'")]+\.(?:jpg|jpeg|png|webp|gif)",
+                r'''url\s*\(\s*['"]?[^'")]+\.(?:jpg|jpeg|png|webp|gif)''',
                 style,
                 re.I,
             ):
