@@ -45,6 +45,11 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
 
         return None, None
 
+    def fetch_initial_target_on_register(self, story: Story) -> bool:
+        """A pasted Wattpad chapter URL is also the first fetch target."""
+        _, target_part_id = self.extract_ids(story.source_url)
+        return target_part_id is not None
+
     @staticmethod
     def _request_json(url):
         req = Request(
@@ -125,6 +130,9 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
             target_toc_index=(
                 target.toc_index if target is not None else 1
             ),
+            registered_toc_index=(
+                target.toc_index if target is not None else None
+            ),
             index_url=data.get("url") or source_url,
         )
 
@@ -132,6 +140,7 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
 
         if target is not None:
             story.target_toc_index = target.toc_index
+            story.registered_toc_index = target.toc_index
 
         return story
 
