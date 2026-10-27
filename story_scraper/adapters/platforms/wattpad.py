@@ -140,6 +140,7 @@ class WattpadAdapter(BaseStaticHTMLAdapter):
                 target.toc_index if target is not None else None
             ),
             index_url=data.get("url") or source_url,
+            cover_url=data.get("cover"),
         )
 
         story.normalize_toc()
