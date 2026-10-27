@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://www.wattpad.com/story/320882705-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "failed",
+  "message": "Không xác định được chính xác vị trí đăng ký trong TOC từ URL: https://www.wattpad.com/story/320882705-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky",
   "created_at": "2026-10-27T01:59:41.814Z",
-  "updated_at": "2026-10-27T01:59:58.509419+00:00"
+  "updated_at": "2026-10-27T02:00:00.028588+00:00"
 }
