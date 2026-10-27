@@ -65,6 +65,27 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
                 unique.append(item)
         return sorted(unique, key=lambda item: item[0])
 
+    def _discover_cover_url(self, soup, base_url: str, title: str) -> str | None:
+        """Discover the story cover from HTML without hard-coding a URL."""
+        cover = soup.find("img", id="vntqCoverImg")
+        if cover:
+            for attr in ("src", "data-src", "data-original", "data-lazy-src"):
+                value = cover.get(attr)
+                if value and not value.startswith("data:"):
+                    return self.absolute_url(base_url, value)
+
+        normalized_title = self.clean_text(title).casefold()
+        if normalized_title:
+            for image in soup.find_all("img"):
+                alt = self.clean_text(image.get("alt", ""))
+                if alt and alt.casefold() == normalized_title:
+                    for attr in ("src", "data-src", "data-original", "data-lazy-src"):
+                        value = image.get(attr)
+                        if value and not value.startswith("data:"):
+                            return self.absolute_url(base_url, value)
+
+        return None
+
     def _debug_cover_candidates(self, soup, base_url: str) -> None:
         """Diagnostic only: inspect possible cover-image locations."""
         print("Cover debug: inspecting story-page image candidates...")
@@ -132,6 +153,12 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
         if not title:
             raise AdapterNotApplicable("VnThuQuan-style page has no title")
 
+        cover_url = self._discover_cover_url(soup, story_url, title)
+        if cover_url:
+            print(f"Cover: phát hiện {cover_url}")
+        else:
+            print("Cover: không phát hiện được từ HTML")
+
         author = ""
         if title_node:
             for heading in title_node.find_all_previous(["h2", "h3"], limit=3):
@@ -169,6 +196,7 @@ class VnThuQuanAdapter(BaseStaticHTMLAdapter):
             chapters=entries,
             target_toc_index=1,
             index_url=story_url,
+            cover_url=cover_url,
         )
 
     def refresh_index(self, story: Story) -> Story:
