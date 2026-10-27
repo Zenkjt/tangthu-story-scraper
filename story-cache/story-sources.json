@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-27T06:21:01.475434+00:00",
+  "updated_at": "2026-10-27T07:31:08.192328+00:00",
   "sources": [
     {
       "domain": "truyenfull.live",
@@ -13,9 +13,9 @@
     {
       "domain": "vietnamthuquan.eu",
       "status": "ok",
-      "adapter": "static-html-family",
+      "adapter": "vnthuquan",
       "reason": "RESOLVED",
-      "timestamp": "2026-10-27T06:20:59.626358+00:00",
+      "timestamp": "2026-10-27T07:30:50.702985+00:00",
       "message": "Bình thường"
     },
     {
