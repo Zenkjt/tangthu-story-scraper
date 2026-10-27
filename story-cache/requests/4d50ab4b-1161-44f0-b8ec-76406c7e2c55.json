@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://www.wattpad.com/story/320882705-%C4%91%C3%AAm-tr%E1%BA%AFng-fyodor-mikhailovich-dostoevsky",
   "chapter_number": null,
-  "status": "queued",
-  "message": "Đã xếp hàng xử lý.",
+  "status": "running",
+  "message": "Đang xử lý: register.",
   "created_at": "2026-10-27T03:22:49.211Z",
-  "updated_at": "2026-10-27T03:22:49.211Z"
+  "updated_at": "2026-10-27T03:23:02.394245+00:00"
 }
