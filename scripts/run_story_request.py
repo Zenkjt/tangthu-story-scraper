@@ -333,7 +333,7 @@ def download_cover(url: str) -> tuple[bytes, str]:
 
 def cache_cover(user_id: str, story: Story) -> str | None:
     try:
-        cover_url = discover_cover_url(story.source_url)
+        cover_url = story.cover_url or discover_cover_url(story.source_url)
         if not cover_url:
             print(
                 "Cover: không tìm thấy og:image/twitter:image; "
