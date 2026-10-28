@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://vietnamthuquan.eu/TacPham/thep-da-toi-the-day-15581/",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "failed",
+  "message": "ReferenceError: storyCache_ is not defined",
   "created_at": "2026-10-28T15:05:38.172Z",
-  "updated_at": "2026-10-28T15:05:57.616899+00:00"
+  "updated_at": "2026-10-28T15:06:00.911759+00:00"
 }
