@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-28T15:17:06.352637+00:00",
+  "updated_at": "2026-10-28T15:25:47.589590+00:00",
   "sources": [
     {
       "domain": "truyenfull.live",
@@ -15,7 +15,7 @@
       "status": "ok",
       "adapter": "vnthuquan",
       "reason": "RESOLVED",
-      "timestamp": "2026-10-28T15:17:03.166497+00:00",
+      "timestamp": "2026-10-28T15:25:06.875710+00:00",
       "message": "Bình thường"
     },
     {
