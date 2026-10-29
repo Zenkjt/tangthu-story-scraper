@@ -29,7 +29,11 @@ class AdapterRegistry:
     and are never recorded as an unsupported-domain resolution.
     """
 
-    def __init__(self, adapters=None, resolution_store: AdapterResolutionStore | None = None):
+    def __init__(
+        self,
+        adapters=None,
+        resolution_store: AdapterResolutionStore | None = None,
+    ):
         self._adapters = []
         self.resolution_store = resolution_store
         for adapter in adapters or []:
@@ -48,7 +52,9 @@ class AdapterRegistry:
     @staticmethod
     def _probe(adapter, url: str) -> bool:
         probe = getattr(adapter, "probe", None)
-        return bool(probe(url)) if probe is not None else bool(adapter.matches(url))
+        return bool(probe(url)) if probe is not None else bool(
+            adapter.matches(url)
+        )
 
     def candidates(self, url: str) -> list[AdapterCandidate]:
         candidates = [
@@ -60,10 +66,14 @@ class AdapterRegistry:
             )
             for a in self._adapters
         ]
-        candidates.sort(key=lambda c: (-c.priority, c.family, c.adapter.name))
+        candidates.sort(
+            key=lambda c: (-c.priority, c.family, c.adapter.name)
+        )
 
         if self.resolution_store is not None:
-            cached = self.resolution_store.latest_success(resolution_domain(url))
+            cached = self.resolution_store.latest_success(
+                resolution_domain(url)
+            )
             if cached:
                 candidates.sort(
                     key=lambda c: (
@@ -82,7 +92,9 @@ class AdapterRegistry:
     def resolve_instance(self, url: str) -> SiteAdapter:
         candidates = self.candidates(url)
         if not candidates:
-            raise AdapterNotApplicable(f"No adapter registered for URL: {url}")
+            raise AdapterNotApplicable(
+                f"No adapter registered for URL: {url}"
+            )
         return candidates[0].adapter()
 
     def resolve_source(self, url: str) -> ResolvedStorySource:
@@ -91,14 +103,22 @@ class AdapterRegistry:
     def recheck_source(self, url: str) -> ResolvedStorySource:
         return self._resolve_source(url, bypass_failure_cache=True)
 
-    def _resolve_source(self, url: str, bypass_failure_cache: bool) -> ResolvedStorySource:
+    def _resolve_source(
+        self,
+        url: str,
+        bypass_failure_cache: bool,
+    ) -> ResolvedStorySource:
         domain = resolution_domain(url)
 
-        if not bypass_failure_cache and self.resolution_store is not None:
+        if (
+            not bypass_failure_cache
+            and self.resolution_store is not None
+        ):
             coverage = self.resolution_store.coverage(domain)
             if coverage.status == "failure":
                 raise AdapterNotApplicable(
-                    f"Known unsupported domain: {domain} ({coverage.reason})"
+                    f"Known unsupported domain: {domain} "
+                    f"({coverage.reason})"
                 )
 
         rejected = []
@@ -124,10 +144,10 @@ class AdapterRegistry:
                         "ADAPTER_NOT_APPLICABLE",
                         url=url,
                     )
-                rejected.append(f"{candidate.adapter.name}: {exc}")
+                rejected.append(
+                    f"{candidate.adapter.name}: {exc}"
+                )
             except Exception:
-                # A real network/HTTP/parser/adapter error is not evidence that
-                # the domain is unsupported. Preserve the error for the caller.
                 raise
 
         if self.resolution_store is not None:
@@ -140,7 +160,8 @@ class AdapterRegistry:
             )
 
         raise AdapterNotApplicable(
-            f"No registered adapter accepted URL: {url} ({'; '.join(rejected)})"
+            f"No registered adapter accepted URL: {url} "
+            f"({'; '.join(rejected)})"
         )
 
     def build_index(self, url: str) -> Story:
@@ -148,17 +169,33 @@ class AdapterRegistry:
 
 
 def default_registry(resolution_store=None) -> AdapterRegistry:
-    from ..adapters import StaticHTMLFamilyAdapter, VnThuQuanAdapter, WattpadAdapter
+    from ..adapters import (
+        KenhTruyenFullAdapter,
+        StaticHTMLFamilyAdapter,
+        VnThuQuanAdapter,
+        WattpadAdapter,
+    )
 
     return AdapterRegistry(
-        [VnThuQuanAdapter, WattpadAdapter, StaticHTMLFamilyAdapter],
+        [
+            KenhTruyenFullAdapter,
+            VnThuQuanAdapter,
+            WattpadAdapter,
+            StaticHTMLFamilyAdapter,
+        ],
         resolution_store=resolution_store,
     )
 
 
-def build_story_source(url: str, resolution_store=None) -> ResolvedStorySource:
+def build_story_source(
+    url: str,
+    resolution_store=None,
+) -> ResolvedStorySource:
     return default_registry(resolution_store).resolve_source(url)
 
 
-def build_story_index(url: str, resolution_store=None) -> Story:
+def build_story_index(
+    url: str,
+    resolution_store=None,
+) -> Story:
     return build_story_source(url, resolution_store).story
