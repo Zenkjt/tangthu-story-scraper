@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://kenhtruyenfull.com/truyen/tru-tien",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "failed",
+  "message": "No registered adapter accepted URL: https://kenhtruyenfull.com/truyen/tru-tien (vnthuquan: Unsupported VnThuQuan-style URL: https://kenhtruyenfull.com/truyen/tru-tien; wattpad: Not a Wattpad URL: https://kenhtruyenfull.com/truyen/tru-tien; static-html-family: static HTML page does not expose a recognizable story TOC)",
   "created_at": "2026-10-29T08:40:41.843Z",
-  "updated_at": "2026-10-29T08:41:01.859420+00:00"
+  "updated_at": "2026-10-29T08:41:04.523279+00:00"
 }
