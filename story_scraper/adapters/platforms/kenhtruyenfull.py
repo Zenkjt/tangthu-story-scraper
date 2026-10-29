@@ -92,8 +92,112 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
         except json.JSONDecodeError:
             return raw.replace(r"\/", "/")
 
+    def _discover_cover_url(
+        self,
+        soup,
+        base_url: str,
+        book_name: str,
+        slug: str,
+    ) -> str | None:
+        """Try several generic cover signals instead of one site-specific selector."""
+
+        def absolute(value: str | None) -> str | None:
+            if not value or value.startswith("data:"):
+                return None
+            return self.absolute_url(base_url, value.strip())
+
+        # 1. Explicit social/SEO metadata.
+        for key in (
+            ("meta", {"property": "og:image"}),
+            ("meta", {"name": "twitter:image"}),
+            ("meta", {"name": "twitter:image:src"}),
+        ):
+            node = soup.find(key[0], attrs=key[1])
+            if node:
+                value = absolute(node.get("content"))
+                if value:
+                    return value
+
+        normalized_title = " ".join(book_name.casefold().split())
+        normalized_slug = slug.casefold().replace("_", "-")
+
+        best_url = None
+        best_score = -1
+
+        for image in soup.find_all("img"):
+            source = (
+                image.get("src")
+                or image.get("data-src")
+                or image.get("data-original")
+                or image.get("data-lazy-src")
+                or image.get("data-srcset")
+            )
+            image_url = absolute(source)
+            if not image_url:
+                continue
+
+            alt = self.clean_text(image.get("alt"))
+            title = self.clean_text(image.get("title"))
+            ident = " ".join(
+                str(image.get(attr) or "")
+                for attr in ("id", "class")
+            ).casefold()
+            text = " ".join((alt, title)).casefold()
+            parsed = urlparse(image_url)
+            filename = parsed.path.rsplit("/", 1)[-1].casefold()
+            stem = re.sub(r"\.[a-z0-9]{2,5}$", "", filename)
+
+            score = 0
+
+            # Exact/near title match is a very strong cover signal.
+            if normalized_title and " ".join(alt.casefold().split()) == normalized_title:
+                score += 120
+            elif normalized_title and normalized_title in " ".join(alt.casefold().split()):
+                score += 80
+
+            if normalized_title and normalized_title in text:
+                score += 30
+
+            # Common semantic cover markers.
+            if any(
+                marker in ident
+                for marker in (
+                    "cover",
+                    "book-cover",
+                    "bookcover",
+                    "bia",
+                    "thumb-book",
+                    "book-image",
+                )
+            ):
+                score += 90
+
+            # KenhTruyenFull's actual pattern is typically /uploads/.../<slug>.jpg.
+            if normalized_slug and normalized_slug in stem.replace("_", "-"):
+                score += 70
+
+            # Prefer images inside the book-information block.
+            parent = image.parent
+            parent_classes = ""
+            if parent is not None:
+                parent_classes = " ".join(
+                    str(parent.get(attr) or "")
+                    for attr in ("id", "class")
+                ).casefold()
+            if any(
+                marker in parent_classes
+                for marker in ("book-info", "book-detail", "story-info", "thong-tin", "info-book")
+            ):
+                score += 35
+
+            if score > best_score:
+                best_score = score
+                best_url = image_url
+
+        return best_url
+
     def _chapter_metadata(
-        self, html: str, base_url: str
+        self, html: str, base_url: str, slug: str
     ) -> tuple[str, str, str, str | None]:
         book_name = self._script_value(html, "book_name") or ""
         chapter_title = self._script_value(html, "chapTitle") or ""
@@ -133,6 +237,11 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
                         image = image[0] if image else None
                     if image:
                         cover_url = self.absolute_url(base_url, str(image))
+
+        if cover_url is None:
+            cover_url = self._discover_cover_url(
+                soup, base_url, book_name, slug
+            )
 
         if not chapter_title:
             heading = (
@@ -177,16 +286,16 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
         number: int,
     ) -> tuple[Chapter, tuple[int, str, str] | None, str, str, str | None]:
         base_url = chapter_url
-        book_name, chapter_title, author, cover_url = self._chapter_metadata(
-            html, base_url
-        )
-
         match = self._chapter_match(chapter_url)
         if not match:
             raise AdapterNotApplicable(
                 f"Unsupported KenhTruyenFull chapter URL: {chapter_url}"
             )
         slug = match.group("slug")
+
+        book_name, chapter_title, author, cover_url = self._chapter_metadata(
+            html, base_url, slug
+        )
 
         current = Chapter(
             number=number,
@@ -244,9 +353,8 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
         )
         story.normalize_toc()
 
-        if chapter_number is not None:
-            story.target_toc_index = 1
-            story.registered_toc_index = 1
+        story.target_toc_index = 1
+        story.registered_toc_index = 1
 
         return story
 
