@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
-TARGET = "https://kenhtruyenfull.com/truyen/tru-tien"
+TARGET = "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-1"
 OUT_DIR = Path(".debug-kenhtruyenfull")
 KEYWORDS = ("chuong", "chapter", "list", "ajax", "api", "page",
             "pagination", "loadmore", "load-more")
