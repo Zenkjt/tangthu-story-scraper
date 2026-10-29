@@ -7,8 +7,50 @@
   "action": "next",
   "url": null,
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: next.",
+  "status": "completed",
+  "message": "Đã tải nội dung và cập nhật mục lục.",
   "created_at": "2026-10-29T15:05:31.655Z",
-  "updated_at": "2026-10-29T15:05:47.811488+00:00"
+  "updated_at": "2026-10-29T15:06:13.597558+00:00",
+  "story": {
+    "story_id": "tru-tien",
+    "title": "tru tien",
+    "author": "",
+    "site": "kenhtruyenfull",
+    "source_url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-1",
+    "current_toc_index": 2,
+    "target_toc_index": 3,
+    "registered_toc_index": 1,
+    "current_chapter": 2,
+    "current_chapter_title": "Chương 2",
+    "total_toc_entries": 3,
+    "total_chapters": 3,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 1,
+        "title": "Chương 1",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-1",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 2,
+        "title": "Chương 2",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-2",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 3,
+        "number": 3,
+        "title": "Chương tiếp",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-3",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready",
+    "cover_url": "https://images.dmca.com/Badges/dmca_protected_sml_120am.png?ID=fab80e07-fe64-4916-807a-8a516ac04521"
+  }
 }
