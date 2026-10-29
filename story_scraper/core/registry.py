@@ -66,23 +66,26 @@ class AdapterRegistry:
             )
             for a in self._adapters
         ]
-        candidates.sort(
-            key=lambda c: (-c.priority, c.family, c.adapter.name)
-        )
 
+        cached = None
         if self.resolution_store is not None:
             cached = self.resolution_store.latest_success(
                 resolution_domain(url)
             )
-            if cached:
-                candidates.sort(
-                    key=lambda c: (
-                        0 if c.adapter.name == cached else 1,
-                        -c.priority,
-                        c.family,
-                        c.adapter.name,
-                    )
-                )
+
+        # A cached adapter is only a preference. It must never outrank an
+        # adapter that explicitly matches the URL. This is important for
+        # resolve_instance(), which is used after the initial source resolve
+        # and must return an adapter valid for the current URL.
+        candidates.sort(
+            key=lambda c: (
+                0 if c.matched else 1,
+                0 if cached and c.adapter.name == cached else 1,
+                -c.priority,
+                c.family,
+                c.adapter.name,
+            )
+        )
 
         return candidates
 
@@ -95,6 +98,9 @@ class AdapterRegistry:
             raise AdapterNotApplicable(
                 f"No adapter registered for URL: {url}"
             )
+        for candidate in candidates:
+            if candidate.matched:
+                return candidate.adapter()
         return candidates[0].adapter()
 
     def resolve_source(self, url: str) -> ResolvedStorySource:
