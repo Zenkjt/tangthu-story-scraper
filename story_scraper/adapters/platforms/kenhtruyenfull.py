@@ -136,8 +136,8 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
             if not image_url:
                 continue
 
-            alt = self.clean_text(image.get("alt"))
-            title = self.clean_text(image.get("title"))
+            alt = " ".join(str(image.get("alt") or "").split())
+            title = " ".join(str(image.get("title") or "").split())
             ident = " ".join(
                 str(image.get(attr) or "")
                 for attr in ("id", "class")
