@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from urllib.parse import urlparse
 
@@ -9,22 +10,22 @@ from ...core.models import Chapter, ChapterContent, Story
 
 
 class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
-    """Adapter for KenhTruyenFull / TruyenFull-style story pages.
+    """Adapter for KenhTruyenFull using lazy chapter traversal.
 
-    All source URL normalization and chapter-link construction stay inside
-    this adapter. The registry only resolves the adapter; callers never
-    construct KenhTruyenFull URLs themselves.
+    KenhTruyenFull does not expose a complete TOC on the story page.
+    A chapter page exposes the next-chapter URL, so the adapter keeps only
+    the currently known chapter chain and extends it one chapter at a time.
     """
 
     name = "kenhtruyenfull"
     family = "static-html"
     priority = 190
+    lazy_toc = True
 
     _STORY_RE = re.compile(
         r"^/(?:truyen|doc-truyen)/(?P<slug>[^/]+?)(?:/chuong-(?P<chapter>\d+))?/?$",
         re.I,
     )
-
     _CHAPTER_RE = re.compile(
         r"^/doc-truyen/(?P<slug>[^/]+)/chuong-(?P<chapter>\d+)/?$",
         re.I,
@@ -50,6 +51,10 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
         value = match.group("chapter")
         return int(value) if value is not None else None
 
+    @classmethod
+    def _chapter_match(cls, url: str):
+        return cls._CHAPTER_RE.match(urlparse(url).path)
+
     def fetch_initial_target_on_register(self, story: Story) -> bool:
         return self._target_chapter_number(story.source_url) is not None
 
@@ -72,11 +77,75 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
             f"/doc-truyen/{slug}/chuong-{number}"
         )
 
-    def _chapter_links(
-        self, html: str, base_url: str, slug: str
-    ) -> list[tuple[int, str, str]]:
+    @staticmethod
+    def _script_value(html: str, variable: str) -> str | None:
+        pattern = re.compile(
+            rf'\bvar\s+{re.escape(variable)}\s*=\s*"((?:\\.|[^"])*)"\s*;',
+            re.I,
+        )
+        match = pattern.search(html)
+        if not match:
+            return None
+        raw = match.group(1)
+        try:
+            return json.loads(f'"{raw}"')
+        except json.JSONDecodeError:
+            return raw.replace(r"\/", "/")
+
+    def _chapter_metadata(
+        self, html: str, base_url: str
+    ) -> tuple[str, str, str, str | None]:
+        book_name = self._script_value(html, "book_name") or ""
+        chapter_title = self._script_value(html, "chapTitle") or ""
+        url_book = self._script_value(html, "url_book") or ""
+        url_chap = self._script_value(html, "url_chap") or ""
+
+        author = ""
+        cover_url = None
+
         soup = self.soup(html)
-        result: list[tuple[int, str, str]] = []
+        for script in soup.find_all("script", attrs={"type": "application/ld+json"}):
+            raw = script.string or script.get_text()
+            if not raw:
+                continue
+            try:
+                data = json.loads(raw)
+            except (TypeError, ValueError):
+                continue
+
+            items = data if isinstance(data, list) else [data]
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                if not book_name:
+                    book_name = str(item.get("name") or "").strip()
+                if not author:
+                    value = item.get("author")
+                    if isinstance(value, dict):
+                        author = str(value.get("name") or "").strip()
+                    elif isinstance(value, str):
+                        author = value.strip()
+                if cover_url is None:
+                    image = item.get("image")
+                    if isinstance(image, dict):
+                        image = image.get("url")
+                    if isinstance(image, list):
+                        image = image[0] if image else None
+                    if image:
+                        cover_url = self.absolute_url(base_url, str(image))
+
+        if not chapter_title:
+            heading = (
+                soup.select_one(".chapter-title, .title-chapter")
+                or soup.find("h1")
+            )
+            chapter_title = self.clean_text(heading)
+
+        return book_name, chapter_title, author, cover_url
+
+    def _next_chapter(self, html: str, base_url: str, current_number: int):
+        soup = self.soup(html)
+        candidates: list[tuple[int, str, str]] = []
 
         for link in soup.find_all("a", href=True):
             href = self.absolute_url(base_url, link["href"])
@@ -85,102 +154,48 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
                 continue
 
             match = self._CHAPTER_RE.match(parsed.path)
-            if not match or match.group("slug").casefold() != slug.casefold():
+            if not match:
                 continue
 
             number = int(match.group("chapter"))
-            title = self.clean_text(link) or f"Chương {number}"
-            result.append((number, title, href.rstrip("/")))
-
-        seen: set[str] = set()
-        unique: list[tuple[int, str, str]] = []
-        for number, title, href in result:
-            key = href.casefold()
-            if key in seen:
+            if number <= current_number:
                 continue
-            seen.add(key)
-            unique.append((number, title, href))
 
-        unique.sort(key=lambda item: (item[0], item[2]))
-        return unique
+            title = self.clean_text(link) or f"Chương {number}"
+            candidates.append((number, title, href.rstrip("/")))
 
-    def _discover_cover_url(
-        self, soup, base_url: str, title: str
-    ) -> str | None:
-        for selector, attr in (
-            ('meta[property="og:image"]', "content"),
-            ('meta[name="twitter:image"]', "content"),
-            ('meta[name="twitter:image:src"]', "content"),
-        ):
-            node = soup.select_one(selector)
-            value = node.get(attr) if node else None
-            if value and not value.startswith("data:"):
-                return self.absolute_url(base_url, value)
+        if not candidates:
+            return None
 
-        cover_words = ("cover", "book-cover", "bookcover", "bia")
-        for image in soup.find_all("img"):
-            marker = " ".join(
-                str(image.get(attr, ""))
-                for attr in ("id", "class", "title", "alt")
-            ).casefold()
-            if any(word in marker for word in cover_words):
-                for attr in (
-                    "src",
-                    "data-src",
-                    "data-original",
-                    "data-lazy-src",
-                ):
-                    value = image.get(attr)
-                    if value and not value.startswith("data:"):
-                        return self.absolute_url(base_url, value)
+        candidates.sort(key=lambda item: (item[0], item[2]))
+        return candidates[0]
 
-        normalized_title = self.clean_text(title).casefold()
-        if normalized_title:
-            for image in soup.find_all("img"):
-                alt = self.clean_text(image.get("alt", ""))
-                if alt and alt.casefold() == normalized_title:
-                    for attr in (
-                        "src",
-                        "data-src",
-                        "data-original",
-                        "data-lazy-src",
-                    ):
-                        value = image.get(attr)
-                        if value and not value.startswith("data:"):
-                            return self.absolute_url(base_url, value)
-
-        return None
-
-    def _author(self, soup, title_node) -> str:
-        label = soup.find(
-            string=re.compile(r"^\s*Tác giả\s*:\s*$", re.I)
+    def _chapter_from_page(
+        self,
+        html: str,
+        chapter_url: str,
+        number: int,
+    ) -> tuple[Chapter, tuple[int, str, str] | None, str, str, str | None]:
+        base_url = chapter_url
+        book_name, chapter_title, author, cover_url = self._chapter_metadata(
+            html, base_url
         )
-        if label:
-            parent = label.parent
-            text = self.clean_text(parent)
-            text = re.sub(
-                r"^\s*Tác giả\s*:\s*",
-                "",
-                text,
-                flags=re.I,
-            ).strip()
-            if text:
-                return text
 
-            next_node = parent.find_next()
-            text = self.clean_text(next_node)
-            if text:
-                return text
+        match = self._chapter_match(chapter_url)
+        if not match:
+            raise AdapterNotApplicable(
+                f"Unsupported KenhTruyenFull chapter URL: {chapter_url}"
+            )
+        slug = match.group("slug")
 
-        if title_node:
-            for heading in title_node.find_all_previous(
-                ["h2", "h3"], limit=3
-            ):
-                candidate = self.clean_text(heading)
-                if candidate:
-                    return candidate
-
-        return ""
+        current = Chapter(
+            number=number,
+            title=chapter_title or f"Chương {number}",
+            url=chapter_url.rstrip("/"),
+            external_id=str(number),
+        )
+        next_chapter = self._next_chapter(html, base_url, number)
+        return current, next_chapter, book_name, author, cover_url
 
     def build_index(self, url: str) -> Story:
         if not self.matches(url):
@@ -188,85 +203,92 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
                 f"Unsupported KenhTruyenFull URL: {url}"
             )
 
-        story_url = self._story_url(url)
-        html = self.fetch_html(story_url)
-        soup = self.soup(html)
+        parsed = self._match(url)
+        slug = parsed.group("slug")
+        chapter_number = self._target_chapter_number(url)
 
-        title_node = soup.find("h1")
-        title = self.clean_text(title_node)
-        if not title:
-            raise AdapterNotApplicable(
-                "KenhTruyenFull story page has no title"
+        if chapter_number is None:
+            chapter_number = 1
+
+        chapter_url = self._chapter_url(url, slug, chapter_number)
+        html = self.fetch_html(chapter_url)
+        current, next_chapter, book_name, author, cover_url = (
+            self._chapter_from_page(html, chapter_url, chapter_number)
+        )
+
+        if not book_name:
+            book_name = slug.replace("-", " ").strip()
+
+        chapters = [current]
+        if next_chapter is not None:
+            number, title, next_url = next_chapter
+            chapters.append(
+                Chapter(
+                    number=number,
+                    title=title,
+                    url=next_url,
+                    external_id=str(number),
+                )
             )
-
-        match = self._match(url)
-        slug = match.group("slug")
-
-        chapter_links = self._chapter_links(html, story_url, slug)
-        if not chapter_links:
-            raise AdapterNotApplicable(
-                "KenhTruyenFull story page does not expose chapter links"
-            )
-
-        chapters = [
-            Chapter(
-                number=number,
-                title=chapter_title,
-                url=chapter_url,
-                external_id=str(number),
-            )
-            for number, chapter_title, chapter_url in chapter_links
-        ]
 
         story = Story(
             story_id=slug,
             source_url=url,
             site=self.name,
-            title=title,
-            author=self._author(soup, title_node),
+            title=book_name,
+            author=author,
             chapters=chapters,
             target_toc_index=1,
-            index_url=story_url,
-            cover_url=self._discover_cover_url(
-                soup, story_url, title
-            ),
+            index_url=chapter_url,
+            cover_url=cover_url,
         )
-
         story.normalize_toc()
 
-        target_number = self._target_chapter_number(url)
-        if target_number is not None:
-            target = next(
-                (
-                    entry
-                    for entry in story.chapters
-                    if entry.number == target_number
-                ),
-                None,
-            )
-            if target is None:
-                raise AdapterNotApplicable(
-                    f"KenhTruyenFull chapter {target_number} "
-                    f"is not present in the story index"
-                )
-            story.target_toc_index = target.toc_index
-            story.registered_toc_index = target.toc_index
+        if chapter_number is not None:
+            story.target_toc_index = 1
+            story.registered_toc_index = 1
 
         return story
 
     def refresh_index(self, story: Story) -> Story:
-        return self.build_index(story.index_url or story.source_url)
+        refreshed = self.build_index(
+            story.target_entry.url
+            if story.target_entry is not None
+            else story.current_entry.url
+            if story.current_entry is not None
+            else story.source_url
+        )
+        return refreshed
 
     def refresh_tail(self, story: Story) -> list[Chapter]:
-        refreshed = self.refresh_index(story)
-        known = {
-            chapter.url.rstrip("/").casefold()
-            for chapter in story.chapters
+        if not story.chapters:
+            return []
+
+        last = max(story.chapters, key=lambda entry: entry.toc_index)
+        match = self._chapter_match(last.url)
+        if not match:
+            return []
+
+        current_number = int(match.group("chapter"))
+        html = self.fetch_html(last.url)
+        next_chapter = self._next_chapter(html, last.url, current_number)
+        if next_chapter is None:
+            return []
+
+        number, title, next_url = next_chapter
+        existing_urls = {
+            chapter.url.rstrip("/").casefold() for chapter in story.chapters
         }
+        if next_url.rstrip("/").casefold() in existing_urls:
+            return []
+
         return [
-            chapter
-            for chapter in refreshed.chapters
-            if chapter.url.rstrip("/").casefold() not in known
+            Chapter(
+                number=number,
+                title=title,
+                url=next_url,
+                external_id=str(number),
+            )
         ]
 
     def fetch_chapter(
@@ -293,6 +315,9 @@ class KenhTruyenFullAdapter(BaseStaticHTMLAdapter):
             or soup.find("h1")
         )
         title = self.clean_text(heading)
+
+        if not title:
+            title = self._script_value(html, "chapTitle") or ""
 
         container = soup.select_one(
             ".chapter-c, .chapter-content, .reading-content, "

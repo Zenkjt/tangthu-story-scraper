@@ -10,7 +10,7 @@ from .state import StoryStateStore
 
 
 class StoryEngine:
-    """Fetch one TOC entry and refresh the complete source TOC at its tail."""
+    """Fetch one TOC entry and extend lazy source TOCs when needed."""
 
     def __init__(
         self,
@@ -62,21 +62,17 @@ class StoryEngine:
         before_signature = self._toc_signature(story)
         current_identity = self._identity(entry)
 
-        fetched = self.adapter.fetch_chapter(entry)
-        content, complete = fetched
+        content, complete = self.adapter.fetch_chapter(entry)
 
         if isinstance(content, ChapterContent):
             new_hash = content.fingerprint()
         else:
             new_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
 
-        # Every fetch produces a brand-new one-entry 0neStory.epub.
         self.epub.append(story, entry, content)
 
         entry.content_hash = new_hash
         entry.status = ChapterStatus.COMPLETE if complete else ChapterStatus.OPEN
-
-        # This is the entry actually written to 0neStory.epub.
         story.current_toc_index = entry.toc_index
 
         if complete:
@@ -88,9 +84,12 @@ class StoryEngine:
 
         catalog_changed = before_signature != self._toc_signature(story)
 
-        # Reaching the last entry known to Tàng Thư is a source refresh point.
         if entry.toc_index == self._last_known_toc_index(story):
-            refreshed_changed = self._refresh_full_toc(story)
+            if getattr(self.adapter, "lazy_toc", False):
+                refreshed_changed = self._refresh_lazy_tail(story)
+            else:
+                refreshed_changed = self._refresh_full_toc(story)
+
             catalog_changed = catalog_changed or refreshed_changed
 
             current_after_refresh = self._find_identity(story, current_identity)
@@ -131,6 +130,27 @@ class StoryEngine:
 
         self.state.save(story)
         return story
+
+    def _refresh_lazy_tail(self, story: Story) -> bool:
+        before = self._toc_signature(story)
+        incoming = list(self.adapter.refresh_tail(story))
+        if not incoming:
+            return False
+
+        known = {
+            self._url_key(entry.url): entry
+            for entry in story.chapters
+            if self._url_key(entry.url)
+        }
+
+        for entry in incoming:
+            key = self._url_key(entry.url)
+            if key and key not in known:
+                story.chapters.append(entry)
+                known[key] = entry
+
+        story.normalize_toc()
+        return before != self._toc_signature(story)
 
     def _refresh_full_toc(self, story: Story) -> bool:
         before = self._toc_signature(story)
@@ -179,8 +199,6 @@ class StoryEngine:
         story.author = refreshed.author or story.author
         story.index_url = refreshed.index_url or story.index_url
         story.site = refreshed.site or story.site
-        # source_url is the original user-supplied registration URL and must
-        # not be replaced by the adapter's index URL.
         story.normalize_toc()
 
         story.target_toc_index = self._index_for_identity(story, old_target)
