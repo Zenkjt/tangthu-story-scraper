@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-29T13:41:11.793769+00:00",
+  "updated_at": "2026-10-29T14:42:04.391148+00:00",
   "sources": [
     {
       "domain": "kenhtruyenfull.com",
-      "status": "ok",
-      "adapter": "kenhtruyenfull",
-      "reason": "RESOLVED",
-      "timestamp": "2026-10-29T13:40:47.197473+00:00",
-      "message": "Bình thường"
+      "status": "fail",
+      "adapter": "vnthuquan",
+      "reason": "ADAPTER_NOT_APPLICABLE",
+      "timestamp": "2026-10-29T14:42:00.603016+00:00",
+      "message": "ADAPTER_NOT_APPLICABLE"
     },
     {
       "domain": "truyenfull.live",
