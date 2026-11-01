@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-01T09:37:38.032816+00:00",
+  "updated_at": "2026-11-01T09:42:24.264183+00:00",
   "sources": [
     {
       "domain": "kenhtruyenfull.com",
       "status": "ok",
       "adapter": "kenhtruyenfull",
       "reason": "RESOLVED",
-      "timestamp": "2026-10-30T01:08:00.597255+00:00",
+      "timestamp": "2026-11-01T09:42:01.273130+00:00",
       "message": "Bình thường"
     },
     {
