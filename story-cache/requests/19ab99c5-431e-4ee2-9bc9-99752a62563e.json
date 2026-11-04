@@ -7,8 +7,8 @@
   "action": "previous",
   "url": null,
   "chapter_number": null,
-  "status": "queued",
-  "message": "Đã xếp hàng xử lý.",
+  "status": "running",
+  "message": "Đang xử lý: previous.",
   "created_at": "2026-11-04T03:14:42.072Z",
-  "updated_at": "2026-11-04T03:14:42.072Z"
+  "updated_at": "2026-11-04T03:14:58.776864+00:00"
 }
