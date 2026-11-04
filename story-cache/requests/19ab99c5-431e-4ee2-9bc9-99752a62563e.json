@@ -7,8 +7,42 @@
   "action": "previous",
   "url": null,
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: previous.",
+  "status": "completed",
+  "message": "Đã chuyển về vị trí trước trong mục lục.",
   "created_at": "2026-11-04T03:14:42.072Z",
-  "updated_at": "2026-11-04T03:14:58.776864+00:00"
+  "updated_at": "2026-11-04T03:15:08.670522+00:00",
+  "story": {
+    "story_id": "tru-tien",
+    "title": "tru tien",
+    "author": "",
+    "site": "kenhtruyenfull",
+    "source_url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-20",
+    "current_toc_index": 1,
+    "target_toc_index": 1,
+    "registered_toc_index": 1,
+    "current_chapter": 1,
+    "current_chapter_title": "Chương 20",
+    "total_toc_entries": 2,
+    "total_chapters": 2,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 20,
+        "title": "Chương 20",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-20",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 21,
+        "title": "Chương tiếp",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-21",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready",
+    "cover_url": "https://images.dmca.com/Badges/dmca_protected_sml_120am.png?ID=fab80e07-fe64-4916-807a-8a516ac04521"
+  }
 }
