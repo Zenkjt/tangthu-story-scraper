@@ -2,13 +2,47 @@
   "schema_version": 1,
   "request_id": "b2f5c8c7-d343-4791-96ef-887ff4315b11",
   "user_id": "g-f5a27f2a7738",
-  "story_id": null,
+  "story_id": "tru-tien",
   "folder_id": "1hR0H-wZejPM59ka-340atSlJCCYaaUbs",
   "action": "register",
   "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-20",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "completed",
+  "message": "Đăng ký truyện thành công.",
   "created_at": "2026-11-04T00:25:25.409Z",
-  "updated_at": "2026-11-04T00:25:41.682380+00:00"
+  "updated_at": "2026-11-04T00:26:05.235510+00:00",
+  "story": {
+    "story_id": "tru-tien",
+    "title": "tru tien",
+    "author": "",
+    "site": "kenhtruyenfull",
+    "source_url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-20",
+    "current_toc_index": 1,
+    "target_toc_index": 2,
+    "registered_toc_index": 1,
+    "current_chapter": 1,
+    "current_chapter_title": "Chương 20",
+    "total_toc_entries": 2,
+    "total_chapters": 2,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 20,
+        "title": "Chương 20",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-20",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 21,
+        "title": "Chương tiếp",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-21",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready",
+    "cover_url": "https://images.dmca.com/Badges/dmca_protected_sml_120am.png?ID=fab80e07-fe64-4916-807a-8a516ac04521"
+  }
 }
