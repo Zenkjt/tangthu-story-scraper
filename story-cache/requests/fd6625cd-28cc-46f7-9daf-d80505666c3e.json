@@ -2,13 +2,47 @@
   "schema_version": 1,
   "request_id": "fd6625cd-28cc-46f7-9daf-d80505666c3e",
   "user_id": "g-f5a27f2a7738",
-  "story_id": null,
+  "story_id": "tru-tien",
   "folder_id": "1hR0H-wZejPM59ka-340atSlJCCYaaUbs",
   "action": "register",
   "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-40",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "completed",
+  "message": "Đăng ký truyện thành công.",
   "created_at": "2026-11-05T06:59:45.696Z",
-  "updated_at": "2026-11-05T07:00:01.938143+00:00"
+  "updated_at": "2026-11-05T07:00:26.862280+00:00",
+  "story": {
+    "story_id": "tru-tien",
+    "title": "tru tien",
+    "author": "",
+    "site": "kenhtruyenfull",
+    "source_url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-40",
+    "current_toc_index": 1,
+    "target_toc_index": 2,
+    "registered_toc_index": 1,
+    "current_chapter": 1,
+    "current_chapter_title": "Chương 40",
+    "total_toc_entries": 2,
+    "total_chapters": 2,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 40,
+        "title": "Chương 40",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-40",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 41,
+        "title": "Chương tiếp",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-41",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready",
+    "cover_url": "https://images.dmca.com/Badges/dmca_protected_sml_120am.png?ID=fab80e07-fe64-4916-807a-8a516ac04521"
+  }
 }
