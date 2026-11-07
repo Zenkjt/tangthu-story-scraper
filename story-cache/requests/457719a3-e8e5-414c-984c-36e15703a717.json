@@ -2,13 +2,47 @@
   "schema_version": 1,
   "request_id": "457719a3-e8e5-414c-984c-36e15703a717",
   "user_id": "g-57dc335753bf",
-  "story_id": null,
+  "story_id": "tru-tien",
   "folder_id": "15-vbQWFB6TD_VVNAzO7YZREz_gLlc-FH",
   "action": "register",
   "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-69",
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "completed",
+  "message": "Đăng ký truyện thành công.",
   "created_at": "2026-11-07T16:57:54.421Z",
-  "updated_at": "2026-11-07T16:58:08.347308+00:00"
+  "updated_at": "2026-11-07T16:58:30.579517+00:00",
+  "story": {
+    "story_id": "tru-tien",
+    "title": "tru tien",
+    "author": "",
+    "site": "kenhtruyenfull",
+    "source_url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-69",
+    "current_toc_index": 1,
+    "target_toc_index": 2,
+    "registered_toc_index": 1,
+    "current_chapter": 1,
+    "current_chapter_title": "Chương 69",
+    "total_toc_entries": 2,
+    "total_chapters": 2,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 69,
+        "title": "Chương 69",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-69",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 70,
+        "title": "Chương tiếp",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-70",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready",
+    "cover_url": "https://images.dmca.com/Badges/dmca_protected_sml_120am.png?ID=fab80e07-fe64-4916-807a-8a516ac04521"
+  }
 }
