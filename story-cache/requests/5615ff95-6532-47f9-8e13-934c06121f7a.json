@@ -7,8 +7,8 @@
   "action": "next",
   "url": null,
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: next.",
+  "status": "failed",
+  "message": "Exception: Access denied: DriveApp.",
   "created_at": "2026-11-07T16:35:13.807Z",
-  "updated_at": "2026-11-07T16:35:27.283135+00:00"
+  "updated_at": "2026-11-07T16:35:36.980691+00:00"
 }
