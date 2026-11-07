@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-69",
   "chapter_number": null,
-  "status": "queued",
-  "message": "Đã xếp hàng xử lý.",
+  "status": "running",
+  "message": "Đang xử lý: register.",
   "created_at": "2026-11-07T16:57:54.421Z",
-  "updated_at": "2026-11-07T16:57:54.421Z"
+  "updated_at": "2026-11-07T16:58:08.347308+00:00"
 }
