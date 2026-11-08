@@ -96,10 +96,23 @@ class StoryEpubSink(EpubSink):
                 f"Không tìm thấy bìa mặc định: {self.COVER_PATH}"
             )
 
+        # Normalize the 1-bit BMP cover to the same compact profile used by
+        # 0neNews: 480x800 grayscale baseline JPEG, optimized at quality 45.
         with Image.open(self.COVER_PATH) as image:
             gray = image.convert("L")
+            normalized = gray.resize(
+                (480, 800),
+                Image.Resampling.LANCZOS,
+            )
             buffer = io.BytesIO()
-            gray.save(buffer, format="JPEG", quality=90, optimize=True)
+            normalized.save(
+                buffer,
+                format="JPEG",
+                quality=45,
+                progressive=False,
+                optimize=True,
+                subsampling=2,
+            )
             cover_bytes = buffer.getvalue()
 
         image_item = epub.EpubItem(
