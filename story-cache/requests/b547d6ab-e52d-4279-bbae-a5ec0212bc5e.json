@@ -7,8 +7,66 @@
   "action": "next",
   "url": null,
   "chapter_number": null,
-  "status": "running",
-  "message": "Đang xử lý: next.",
+  "status": "completed",
+  "message": "Đã tải nội dung và cập nhật mục lục.",
   "created_at": "2026-11-08T06:37:23.555Z",
-  "updated_at": "2026-11-08T06:37:38.170054+00:00"
+  "updated_at": "2026-11-08T06:38:01.068515+00:00",
+  "story": {
+    "story_id": "tru-tien",
+    "title": "tru tien",
+    "author": "",
+    "site": "kenhtruyenfull",
+    "source_url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-75",
+    "current_toc_index": 4,
+    "target_toc_index": 5,
+    "registered_toc_index": 1,
+    "current_chapter": 4,
+    "current_chapter_title": "Chương 78",
+    "total_toc_entries": 5,
+    "total_chapters": 5,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 75,
+        "title": "Chương 75",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-75",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 76,
+        "title": "Chương 76",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-76",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 3,
+        "number": 77,
+        "title": "Chương 77",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-77",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 4,
+        "number": 78,
+        "title": "Chương 78",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-78",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 5,
+        "number": 79,
+        "title": "Chương tiếp",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-79",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready",
+    "cover_url": "https://images.dmca.com/Badges/dmca_protected_sml_120am.png?ID=fab80e07-fe64-4916-807a-8a516ac04521"
+  }
 }
