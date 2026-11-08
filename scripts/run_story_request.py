@@ -334,6 +334,95 @@ def build_cached_source(app, url: str, folder_id: str, story_id: str):
     )
 
 
+def resolve_navigation_target(
+    story: Story,
+    action: str,
+    requested_toc_index: int | str | None = None,
+) -> int:
+    """Resolve navigation actions to a validated canonical TOC position."""
+    story.normalize_toc()
+
+    if action == "next":
+        target = story.target_toc_index
+    elif action == "previous":
+        # Previous means the entry before the one currently displayed,
+        # not the entry before target_toc_index (which normally points ahead).
+        current = story.current_toc_index
+        if current is None:
+            raise ValueError("Chưa có vị trí hiện tại để lùi.")
+        target = int(current) - 1
+    elif action == "jump":
+        if requested_toc_index is None:
+            raise ValueError("Thiếu toc_index cho thao tác Jump.")
+        try:
+            target = int(requested_toc_index)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("toc_index không hợp lệ.") from exc
+    else:
+        raise ValueError(f"Unsupported navigation action: {action}")
+
+    if target is None:
+        raise ValueError("Không xác định được vị trí TOC cần tải.")
+    if target < 1:
+        raise ValueError("Đã ở vị trí đầu tiên, không còn entry trước.")
+    if story.entry_at(target) is None:
+        raise ValueError(f"Không tìm thấy TOC position: {target}")
+    return target
+
+
+def execute_navigation(
+    app,
+    request: dict,
+    story: Story,
+    *,
+    user_id: str,
+    story_id: str,
+    folder_id: str,
+    story_path: Path,
+    catalog_path: Path,
+    catalog,
+) -> Story:
+    """Shared fetch → EPUB → State → Drive → operation pipeline."""
+    action = request["action"]
+    target_toc_index = resolve_navigation_target(
+        story,
+        action,
+        request.get("toc_index"),
+    )
+    before = toc_signature(story)
+
+    # Previous and Jump explicitly select an entry. Next uses the queued target.
+    if action in {"previous", "jump"}:
+        app.set_target(user_id, story_id, target_toc_index)
+
+    story = app.trigger_next(
+        user_id,
+        story_id,
+        LocalEpubSink(story_path),
+        catalog=catalog,
+    )
+    after = toc_signature(story)
+
+    if not story_path.exists():
+        raise RuntimeError("Không tạo được 0neStory.epub cho vị trí yêu cầu.")
+
+    # Persist canonical StoryState before publishing the artifact.
+    write_story_state(folder_id, story)
+    upload_drive(folder_id, "0neStory.epub", story_path.read_bytes())
+
+    if before != after and catalog_path.exists():
+        upload_drive(folder_id, "0neStoryTOC.epub", catalog_path.read_bytes())
+
+    messages = {
+        "next": "Đã tải nội dung tiếp theo.",
+        "previous": "Đã lùi một vị trí và cập nhật EPUB + State.",
+        "jump": f"Đã tải vị trí TOC {target_toc_index}.",
+    }
+    update_operation(request, "completed", messages[action], story)
+    update_source_coverage()
+    return story
+
+
 def main() -> int:
     request = read_request(os.environ["STORY_REQUEST_ID"])
     action = request["action"]
@@ -419,107 +508,18 @@ def main() -> int:
         catalog_path = out / "0neStoryTOC.epub"
         catalog = StoryCatalogEpubSink(catalog_path)
 
-        if action == "previous":
-            story = app.trigger_previous(
-                user_id,
-                story_id,
-                _NullSink(),
-                catalog=catalog,
-            )
-            write_story_state(folder_id, story)
-            update_operation(
+        if action in {"next", "previous", "jump"}:
+            execute_navigation(
+                app,
                 request,
-                "completed",
-                "Đã chuyển về vị trí trước trong mục lục.",
                 story,
-            )
-            return 0
-
-        if action == "jump":
-            toc_index = int(request.get("toc_index", request.get("chapter_number", 0)))
-            if toc_index < 1:
-                raise ValueError("TOC position must be >= 1")
-
-            story = app.set_target(user_id, story_id, toc_index)
-            requested_entry = story.entry_at(toc_index)
-            if requested_entry is None:
-                raise ValueError(f"Unknown TOC position: {toc_index}")
-            requested_identity = (
-                requested_entry.external_id,
-                normalize_url(requested_entry.url),
-                requested_entry.kind,
-            )
-            before = toc_signature(story)
-
-            story_sink = LocalEpubSink(story_path)
-            story = app.trigger_next(
-                user_id,
-                story_id,
-                story_sink,
+                user_id=user_id,
+                story_id=story_id,
+                folder_id=folder_id,
+                story_path=story_path,
+                catalog_path=catalog_path,
                 catalog=catalog,
             )
-            after = toc_signature(story)
-
-            fetched_entry = next(
-                (
-                    entry
-                    for entry in story.chapters
-                    if (
-                        entry.external_id,
-                        normalize_url(entry.url),
-                        entry.kind,
-                    )
-                    == requested_identity
-                ),
-                None,
-            )
-            if fetched_entry is None:
-                raise RuntimeError(
-                    f"Không còn tìm thấy vị trí TOC {toc_index} sau khi tải."
-                )
-            story = app.set_target(user_id, story_id, fetched_entry.toc_index)
-            write_story_state(folder_id, story)
-
-            if not story_path.exists():
-                raise RuntimeError("Không tạo được 0neStory.epub cho vị trí yêu cầu.")
-            upload_drive(folder_id, "0neStory.epub", story_path.read_bytes())
-            if before != after and catalog_path.exists():
-                upload_drive(folder_id, "0neStoryTOC.epub", catalog_path.read_bytes())
-
-            update_operation(
-                request,
-                "completed",
-                f"Đã tải vị trí {toc_index} trong mục lục.",
-                story,
-            )
-            update_source_coverage()
-            return 0
-
-        if action == "next":
-            before = toc_signature(story)
-            story_sink = LocalEpubSink(story_path)
-            story = app.trigger_next(
-                user_id,
-                story_id,
-                story_sink,
-                catalog=catalog,
-            )
-            after = toc_signature(story)
-            write_story_state(folder_id, story)
-
-            if not story_path.exists():
-                raise RuntimeError("Không tạo được 0neStory.epub cho vị trí tiếp theo.")
-            upload_drive(folder_id, "0neStory.epub", story_path.read_bytes())
-            if before != after and catalog_path.exists():
-                upload_drive(folder_id, "0neStoryTOC.epub", catalog_path.read_bytes())
-
-            message = (
-                "Đã tải nội dung và cập nhật mục lục."
-                if before != after
-                else "Đã tải nội dung."
-            )
-            update_operation(request, "completed", message, story)
-            update_source_coverage()
             return 0
 
         raise RuntimeError(f"Unsupported action: {action}")
