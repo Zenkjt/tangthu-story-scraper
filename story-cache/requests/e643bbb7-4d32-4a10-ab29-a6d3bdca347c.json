@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-77",
   "toc_index": null,
-  "status": "queued",
-  "message": "Đã xếp hàng xử lý.",
+  "status": "running",
+  "message": "Đang xử lý: register.",
   "created_at": "2026-11-10T00:55:09.136Z",
-  "updated_at": "2026-11-10T00:55:09.136Z"
+  "updated_at": "2026-11-10T00:55:27.099136+00:00"
 }
