@@ -48,12 +48,16 @@ class StoryEpubSink(EpubSink):
     ) -> None:
         self._write(self._single_entry_book(story, chapter, content))
 
-    def _base_book(self, story: Story) -> epub.EpubBook:
+    def _base_book(
+        self,
+        story: Story,
+        author: str | None = None,
+    ) -> epub.EpubBook:
         book = epub.EpubBook()
         book.set_identifier(f"tangthu-story-{story.story_id}")
         book.set_title(story.title or story.story_id)
         book.set_language(self.language)
-        book.add_author(story.author or "Tàng Thư")
+        book.add_author(author or story.author or "Tàng Thư")
         book.add_metadata("DC", "publisher", self.publisher)
         book.add_metadata("DC", "source", story.source_url)
         return book
@@ -70,7 +74,8 @@ class StoryEpubSink(EpubSink):
         content: str | ChapterContent,
     ) -> epub.EpubBook:
         story.normalize_toc()
-        book = self._base_book(story)
+        chapter_author = chapter.title or f"Vị trí {chapter.toc_index}"
+        book = self._base_book(story, chapter_author)
         self._add_cover(book)
 
         item = self._chapter_item(book, chapter, content)
