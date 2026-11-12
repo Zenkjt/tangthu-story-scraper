@@ -7,10 +7,10 @@
   "action": "next",
   "url": null,
   "toc_index": null,
-  "status": "completed",
-  "message": "Đã tải nội dung tiếp theo.",
+  "status": "failed",
+  "message": "HTTP Error 409: Conflict",
   "created_at": "2026-11-12T07:45:09.679Z",
-  "updated_at": "2026-11-12T07:45:48.547976+00:00",
+  "updated_at": "2026-11-12T07:45:51.165284+00:00",
   "story": {
     "story_id": "tru-tien",
     "title": "tru tien",
