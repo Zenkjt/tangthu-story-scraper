@@ -2,13 +2,47 @@
   "schema_version": 1,
   "request_id": "042492c0-7ff0-4cee-bffb-cfad56bc4d3f",
   "user_id": "g-f5a27f2a7738",
-  "story_id": null,
+  "story_id": "tru-tien",
   "folder_id": "1hR0H-wZejPM59ka-340atSlJCCYaaUbs",
   "action": "register",
   "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-142",
   "toc_index": null,
-  "status": "running",
-  "message": "Đang xử lý: register.",
+  "status": "completed",
+  "message": "Đăng ký truyện thành công.",
   "created_at": "2026-11-12T23:41:44.799Z",
-  "updated_at": "2026-11-12T23:42:00.570565+00:00"
+  "updated_at": "2026-11-12T23:42:23.037640+00:00",
+  "story": {
+    "story_id": "tru-tien",
+    "title": "tru tien",
+    "author": "",
+    "site": "kenhtruyenfull",
+    "source_url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-142",
+    "current_toc_index": 1,
+    "target_toc_index": 2,
+    "registered_toc_index": 1,
+    "current_chapter": 1,
+    "current_chapter_title": "Chương 142",
+    "total_toc_entries": 2,
+    "total_chapters": 2,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 142,
+        "title": "Chương 142",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-142",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 143,
+        "title": "Chương tiếp",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-143",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready",
+    "cover_url": "https://images.dmca.com/Badges/dmca_protected_sml_120am.png?ID=fab80e07-fe64-4916-807a-8a516ac04521"
+  }
 }
