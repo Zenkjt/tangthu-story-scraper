@@ -7,8 +7,8 @@
   "action": "next",
   "url": null,
   "toc_index": null,
-  "status": "queued",
-  "message": "Đã xếp hàng xử lý.",
+  "status": "running",
+  "message": "Đang xử lý: next.",
   "created_at": "2026-11-21T17:25:11.583Z",
-  "updated_at": "2026-11-21T17:25:11.583Z"
+  "updated_at": "2026-11-21T17:25:26.756800+00:00"
 }
