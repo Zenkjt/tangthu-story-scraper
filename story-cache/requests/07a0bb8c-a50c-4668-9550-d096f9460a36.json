@@ -7,8 +7,8 @@
   "action": "register",
   "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-211",
   "toc_index": null,
-  "status": "queued",
-  "message": "Đã xếp hàng xử lý.",
+  "status": "running",
+  "message": "Đang xử lý: register.",
   "created_at": "2026-11-23T15:27:56.994Z",
-  "updated_at": "2026-11-23T15:27:56.994Z"
+  "updated_at": "2026-11-23T15:28:14.486676+00:00"
 }
