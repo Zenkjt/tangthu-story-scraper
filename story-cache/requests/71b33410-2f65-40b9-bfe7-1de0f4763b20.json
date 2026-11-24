@@ -7,8 +7,66 @@
   "action": "previous",
   "url": null,
   "toc_index": null,
-  "status": "running",
-  "message": "Đang xử lý: previous.",
+  "status": "completed",
+  "message": "Đã lùi một vị trí và cập nhật EPUB + State.",
   "created_at": "2026-11-24T06:59:45.783Z",
-  "updated_at": "2026-11-24T07:00:09.116406+00:00"
+  "updated_at": "2026-11-24T07:00:25.347376+00:00",
+  "story": {
+    "story_id": "tru-tien",
+    "title": "tru tien",
+    "author": "",
+    "site": "kenhtruyenfull",
+    "source_url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-211",
+    "current_toc_index": 3,
+    "target_toc_index": 4,
+    "registered_toc_index": 1,
+    "current_chapter": 3,
+    "current_chapter_title": "Chương 213",
+    "total_toc_entries": 5,
+    "total_chapters": 5,
+    "chapters": [
+      {
+        "toc_index": 1,
+        "number": 211,
+        "title": "Chương 211",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-211",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 2,
+        "number": 212,
+        "title": "Chương 212",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-212",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 3,
+        "number": 213,
+        "title": "Chương 213",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-213",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 4,
+        "number": 214,
+        "title": "Chương 214",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-214",
+        "kind": "chapter",
+        "status": "complete"
+      },
+      {
+        "toc_index": 5,
+        "number": 215,
+        "title": "Chương tiếp",
+        "url": "https://kenhtruyenfull.com/doc-truyen/tru-tien/chuong-215",
+        "kind": "chapter",
+        "status": "pending"
+      }
+    ],
+    "status": "ready",
+    "cover_url": "https://images.dmca.com/Badges/dmca_protected_sml_120am.png?ID=fab80e07-fe64-4916-807a-8a516ac04521"
+  }
 }
